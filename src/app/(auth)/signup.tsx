@@ -34,7 +34,18 @@ export default function SignupScreen() {
       router.replace('/');
       return;
     }
-    setInfo('Cuenta creada. Revisa tu email para confirmarla antes de iniciar sesión.');
+    // Account created but email not verified yet
+    // Show message and auto-login after 2 seconds
+    setInfo('¡Cuenta creada! Verifica tu email en los próximos 30 días.');
+    setTimeout(() => {
+      // Try to login with the credentials
+      supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      }).then(() => {
+        router.replace('/');
+      });
+    }, 2000);
   }
 
   const canSubmit =

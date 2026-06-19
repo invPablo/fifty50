@@ -8,15 +8,27 @@ import { CreateGroupSheet } from '@/components/create-group-sheet';
 import { GroupCard } from '@/components/group-card';
 import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { getDaysUntilExpiry } from '@/lib/email-verification';
 import { supabase } from '@/lib/supabase';
 import { useGroupsStore } from '@/store/use-groups-store';
+import { useSession } from '@/hooks/use-session';
 
 export default function GroupsListScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const { session } = useSession();
   const groups = useGroupsStore((s) => s.groups);
   const fetchGroups = useGroupsStore((s) => s.fetchGroups);
   const [sheetVisible, setSheetVisible] = useState(false);
+
+  const emailVerificationDays = session?.user?.created_at
+    ? getDaysUntilExpiry(session.user.created_at)
+    : null;
+  const showEmailWarning =
+    emailVerificationDays !== null &&
+    emailVerificationDays > 0 &&
+    emailVerificationDays <= 7 &&
+    !session?.user?.email_confirmed_at;
 
   useFocusEffect(
     useCallback(() => {
@@ -26,6 +38,20 @@ export default function GroupsListScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
+      {showEmailWarning && (
+        <View style={[styles.emailWarning, { backgroundColor: theme.debtSoft }]}>
+          <Feather name="alert-circle" size={18} color={theme.debt} />
+          <View style={styles.emailWarningContent}>
+            <Text style={[styles.emailWarningTitle, { color: theme.debt, fontFamily: Fonts.bold }]}>
+              Verifica tu email
+            </Text>
+            <Text style={[styles.emailWarningText, { color: theme.debt }]}>
+              {emailVerificationDays} día{emailVerificationDays === 1 ? '' : 's'} restante{emailVerificationDays === 1 ? '' : 's'}
+            </Text>
+          </View>
+        </View>
+      )}
+
       <View style={styles.header}>
         <Text style={[styles.title, { color: theme.text, fontFamily: Fonts.heading }]}>
           Tus grupos
@@ -91,6 +117,24 @@ export default function GroupsListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  emailWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    marginBottom: 8,
+  },
+  emailWarningContent: {
+    flex: 1,
+    gap: 2,
+  },
+  emailWarningTitle: {
+    fontSize: 13,
+  },
+  emailWarningText: {
+    fontSize: 12,
   },
   header: {
     flexDirection: 'row',

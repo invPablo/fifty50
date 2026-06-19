@@ -95,6 +95,19 @@ export default function GroupDetailScreen() {
       />
 
       <ScrollView contentContainerStyle={styles.content}>
+        <Pressable
+          onPress={handleShare}
+          style={({ pressed }) => [
+            styles.shareCard,
+            { backgroundColor: theme.accentSoft, opacity: pressed ? 0.7 : 1 },
+          ]}
+        >
+          <Feather name="share-2" size={20} color={theme.accent} />
+          <Text style={[styles.shareText, { color: theme.accent }]}>
+            Compartir link del grupo
+          </Text>
+        </Pressable>
+
         <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Balances</Text>
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
           {group.members.map((member) => (
@@ -177,6 +190,19 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     paddingBottom: 100,
+  },
+  shareCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 20,
+  },
+  shareText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
   sectionTitle: {
     fontSize: 13,

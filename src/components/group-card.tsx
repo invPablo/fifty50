@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
 import { currencySymbol } from '@/constants/currencies';
+import { getAvatarColor } from '@/lib/avatar';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { useGroupsStore } from '@/store/use-groups-store';
@@ -21,6 +22,7 @@ export function GroupCard({ group, onPress }: GroupCardProps) {
   const myMember = group.members.find((m) => m.userId === session?.user.id);
   const yourBalance = myMember ? balances[myMember.id] ?? 0 : 0;
   const symbol = currencySymbol(group.currency);
+  const accentColor = getAvatarColor(group.id);
 
   const isCredit = yourBalance > 0.01;
   const isDebt = yourBalance < -0.01;
@@ -37,55 +39,61 @@ export function GroupCard({ group, onPress }: GroupCardProps) {
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
-        { backgroundColor: theme.card, borderColor: theme.border, opacity: pressed ? 0.8 : 1 },
+        { backgroundColor: theme.card, borderColor: theme.border, opacity: pressed ? 0.85 : 1 },
       ]}
     >
-      <View style={styles.info}>
-        <Text style={[styles.name, { color: theme.text, fontFamily: Fonts.bold }]}>
-          {group.name}
-        </Text>
-        <Text style={[styles.meta, { color: theme.textSecondary }]}>
-          {group.members.length} miembros · {group.expenses.length} gastos
-        </Text>
-        <View style={[styles.balancePill, pillBackground ? { backgroundColor: pillBackground } : null]}>
-          <Text style={[styles.balance, { color: balanceColor, fontFamily: Fonts.bold }]}>
-            {balanceLabel}
-          </Text>
-        </View>
+      <View style={[styles.iconWrap, { backgroundColor: accentColor + '22' }]}>
+        <Feather name="map-pin" size={20} color={accentColor} />
       </View>
-      <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+      <Text style={[styles.name, { color: theme.text, fontFamily: Fonts.bold }]} numberOfLines={2}>
+        {group.name}
+      </Text>
+      <Text style={[styles.meta, { color: theme.textSecondary }]}>
+        {group.members.length} miembros · {group.expenses.length} gastos
+      </Text>
+      <View style={[styles.balancePill, pillBackground ? { backgroundColor: pillBackground } : null]}>
+        <Text style={[styles.balance, { color: balanceColor, fontFamily: Fonts.bold }]} numberOfLines={1}>
+          {balanceLabel}
+        </Text>
+      </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flex: 1,
     borderRadius: 18,
     borderWidth: 1,
     padding: 16,
-    marginBottom: 12,
+    gap: 8,
+    minHeight: 150,
     boxShadow: '0px 2px 8px rgba(0,0,0,0.05)',
   },
-  info: {
-    gap: 6,
+  iconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
   },
   name: {
     fontSize: 16,
+    lineHeight: 20,
   },
   meta: {
-    fontSize: 13,
+    fontSize: 12,
+    flex: 1,
   },
   balancePill: {
     alignSelf: 'flex-start',
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    marginTop: 2,
+    marginTop: 'auto',
   },
   balance: {
-    fontSize: 14,
+    fontSize: 13,
   },
 });

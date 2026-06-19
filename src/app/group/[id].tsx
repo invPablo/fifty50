@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 
@@ -57,6 +57,24 @@ export default function GroupDetailScreen() {
     }
   }
 
+  function confirmDelete() {
+    // Alert.alert has no effect on react-native-web, so use window.confirm there instead.
+    if (Platform.OS === 'web') {
+      if (window.confirm('¿Seguro que quieres eliminar este grupo? Esta acción no se puede deshacer.')) {
+        handleDelete();
+      }
+      return;
+    }
+    Alert.alert(
+      'Eliminar grupo',
+      '¿Seguro que quieres eliminar este grupo? Esta acción no se puede deshacer.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Eliminar', style: 'destructive', onPress: handleDelete },
+      ]
+    );
+  }
+
   async function handleShare() {
     const link = `https://splitto.app/join/${groupId}`;
     try {
@@ -73,40 +91,33 @@ export default function GroupDetailScreen() {
         options={{
           title: group.name,
           headerTitleStyle: { fontFamily: Fonts.heading, fontSize: 17 },
-          headerRight: () => (
-            <View style={styles.headerRight}>
-              <Pressable
-                onPress={handleShare}
-                hitSlop={8}
-                style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-              >
-                <Feather name="share-2" size={20} color={theme.accent} />
-              </Pressable>
-              <Pressable
-                onPress={handleDelete}
-                hitSlop={8}
-                style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-              >
-                <Feather name="trash-2" size={20} color={theme.debt} />
-              </Pressable>
-            </View>
-          ),
         }}
       />
 
       <ScrollView contentContainerStyle={styles.content}>
-        <Pressable
-          onPress={handleShare}
-          style={({ pressed }) => [
-            styles.shareCard,
-            { backgroundColor: theme.accentSoft, opacity: pressed ? 0.7 : 1 },
-          ]}
-        >
-          <Feather name="share-2" size={20} color={theme.accent} />
-          <Text style={[styles.shareText, { color: theme.accent }]}>
-            Compartir link del grupo
-          </Text>
-        </Pressable>
+        <View style={styles.actionsRow}>
+          <Pressable
+            onPress={handleShare}
+            style={({ pressed }) => [
+              styles.shareCard,
+              { backgroundColor: theme.accentSoft, opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <Feather name="share-2" size={20} color={theme.accent} />
+            <Text style={[styles.shareText, { color: theme.accent }]}>
+              Compartir link
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={confirmDelete}
+            style={({ pressed }) => [
+              styles.deleteCard,
+              { backgroundColor: theme.debtSoft, opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <Feather name="trash-2" size={20} color={theme.debt} />
+          </Pressable>
+        </View>
 
         <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Balances</Text>
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -182,27 +193,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  headerRight: {
-    flexDirection: 'row',
-    gap: 16,
-    marginRight: 12,
-  },
   content: {
     padding: 20,
     paddingBottom: 100,
   },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
   shareCard: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 12,
     borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    marginBottom: 20,
   },
   shareText: {
     fontSize: 15,
     fontWeight: '600',
+  },
+  deleteCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+    width: 48,
   },
   sectionTitle: {
     fontSize: 13,

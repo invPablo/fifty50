@@ -99,6 +99,8 @@ export default function GroupsListScreen() {
         <FlatList
           data={groups}
           keyExtractor={(item) => item.id}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
             <GroupCard
@@ -166,6 +168,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 24,
+  },
+  row: {
+    gap: 12,
+    marginBottom: 12,
   },
   empty: {
     flex: 1,

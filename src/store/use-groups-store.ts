@@ -138,8 +138,37 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
   },
 
   deleteGroup: async (groupId) => {
-    const { error } = await supabase.from('groups').delete().eq('id', groupId);
-    if (error) throw error;
+    // Delete in order: expense_splits → expenses → group_members → group
+    // This ensures referential integrity even without cascading deletes
+    const { error: splitsError } = await supabase
+      .from('expense_splits')
+      .delete()
+      .in('expense_id',
+        (await supabase
+          .from('expenses')
+          .select('id')
+          .eq('group_id', groupId)).data?.map(e => e.id) ?? []
+      );
+    if (splitsError) throw splitsError;
+
+    const { error: expensesError } = await supabase
+      .from('expenses')
+      .delete()
+      .eq('group_id', groupId);
+    if (expensesError) throw expensesError;
+
+    const { error: membersError } = await supabase
+      .from('group_members')
+      .delete()
+      .eq('group_id', groupId);
+    if (membersError) throw membersError;
+
+    const { error: groupError } = await supabase
+      .from('groups')
+      .delete()
+      .eq('id', groupId);
+    if (groupError) throw groupError;
+
     set((state) => ({ groups: state.groups.filter((g) => g.id !== groupId) }));
   },
 

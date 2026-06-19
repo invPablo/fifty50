@@ -78,6 +78,27 @@ export default function ProfileScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
+            SEGURIDAD
+          </Text>
+          <Pressable
+            onPress={() => router.push('/change-password')}
+            style={({ pressed }) => [
+              styles.menuItem,
+              { backgroundColor: theme.card, borderColor: theme.border, opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <View style={styles.menuItemContent}>
+              <Feather name="lock" size={18} color={theme.textSecondary} />
+              <Text style={[styles.menuItemText, { color: theme.text }]}>
+                Cambiar contraseña
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={18} color={theme.textSecondary} />
+          </Pressable>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
             PREFERENCIAS
           </Text>
           <Pressable

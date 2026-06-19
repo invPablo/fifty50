@@ -32,11 +32,11 @@ export default function GroupsListScreen() {
         </Text>
         <View style={styles.headerActions}>
           <Pressable
-            onPress={() => supabase.auth.signOut()}
+            onPress={() => router.push('/profile')}
             hitSlop={8}
             style={({ pressed }) => [styles.iconButton, { opacity: pressed ? 0.6 : 1 }]}
           >
-            <Feather name="log-out" size={20} color={theme.textSecondary} />
+            <Feather name="user" size={20} color={theme.textSecondary} />
           </Pressable>
           <Pressable
             onPress={() => setSheetVisible(true)}

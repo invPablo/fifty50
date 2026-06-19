@@ -51,7 +51,7 @@ export function CreateGroupSheet({ visible, onClose }: CreateGroupSheetProps) {
   }
 
   async function handleCreate() {
-    if (!name.trim() || !yourDisplayName.trim() || invites.length === 0) return;
+    if (!name.trim() || !yourDisplayName.trim()) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -69,8 +69,7 @@ export function CreateGroupSheet({ visible, onClose }: CreateGroupSheetProps) {
     }
   }
 
-  const canCreate =
-    name.trim().length > 0 && yourDisplayName.trim().length > 0 && invites.length > 0 && !submitting;
+  const canCreate = name.trim().length > 0 && yourDisplayName.trim().length > 0 && !submitting;
 
   return (
     <BottomSheet visible={visible} title="Nuevo grupo" onClose={onClose}>
@@ -129,11 +128,11 @@ export function CreateGroupSheet({ visible, onClose }: CreateGroupSheetProps) {
             </Pressable>
           ))}
         </View>
-        {invites.length === 0 && (
-          <Text style={[styles.hint, { color: theme.textSecondary }]}>
-            Si esa persona aún no tiene cuenta, se unirá automáticamente al registrarse con ese email.
-          </Text>
-        )}
+        <Text style={[styles.hint, { color: theme.textSecondary }]}>
+          {invites.length === 0
+            ? 'Crea el grupo sin invitar a nadie. Podrás compartir el link después.'
+            : 'Si esa persona aún no tiene cuenta, se unirá automáticamente al registrarse con ese email.'}
+        </Text>
 
         <Text style={[styles.label, { color: theme.textSecondary }]}>Moneda</Text>
         <View style={styles.chipWrap}>

@@ -1,8 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Clipboard from 'expo-clipboard';
 
 import { AddExpenseSheet } from '@/components/add-expense-sheet';
 import { BalanceRow } from '@/components/balance-row';
@@ -56,6 +57,16 @@ export default function GroupDetailScreen() {
     }
   }
 
+  async function handleShare() {
+    const link = `https://splitto.app/join/${groupId}`;
+    try {
+      await Clipboard.setStringAsync(link);
+      Alert.alert('Link copiado', `Link compartible copiado al portapapeles:\n\n${link}`);
+    } catch {
+      Alert.alert('Error', 'No se pudo copiar el link');
+    }
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       <Stack.Screen
@@ -63,13 +74,22 @@ export default function GroupDetailScreen() {
           title: group.name,
           headerTitleStyle: { fontFamily: Fonts.heading, fontSize: 17 },
           headerRight: () => (
-            <Pressable
-              onPress={handleDelete}
-              hitSlop={8}
-              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-            >
-              <Feather name="trash-2" size={20} color={theme.debt} />
-            </Pressable>
+            <View style={styles.headerRight}>
+              <Pressable
+                onPress={handleShare}
+                hitSlop={8}
+                style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+              >
+                <Feather name="share-2" size={20} color={theme.accent} />
+              </Pressable>
+              <Pressable
+                onPress={handleDelete}
+                hitSlop={8}
+                style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+              >
+                <Feather name="trash-2" size={20} color={theme.debt} />
+              </Pressable>
+            </View>
           ),
         }}
       />
@@ -148,6 +168,11 @@ export default function GroupDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    gap: 16,
+    marginRight: 12,
   },
   content: {
     padding: 20,

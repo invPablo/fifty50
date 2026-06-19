@@ -3,26 +3,29 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Categories } from '@/constants/categories';
 import { useTheme } from '@/hooks/use-theme';
-import type { Expense } from '@/types/models';
+import type { Expense, GroupMember } from '@/types/models';
 
 interface ExpenseRowProps {
   expense: Expense;
   symbol: string;
+  membersById: Record<string, GroupMember>;
 }
 
-export function ExpenseRow({ expense, symbol }: ExpenseRowProps) {
+export function ExpenseRow({ expense, symbol, membersById }: ExpenseRowProps) {
   const theme = useTheme();
   const category = Categories.find((c) => c.id === expense.category);
+  const payerName = membersById[expense.paidBy]?.displayName ?? '?';
+  const categoryColor = category?.color ?? theme.accent;
 
   return (
     <View style={styles.row}>
-      <View style={[styles.iconWrap, { backgroundColor: theme.accentSoft }]}>
-        <Feather name={(category?.icon ?? 'box') as any} size={18} color={theme.accent} />
+      <View style={[styles.iconWrap, { backgroundColor: categoryColor + '22' }]}>
+        <Feather name={(category?.icon ?? 'box') as any} size={18} color={categoryColor} />
       </View>
       <View style={styles.info}>
         <Text style={[styles.description, { color: theme.text }]}>{expense.description}</Text>
         <Text style={[styles.meta, { color: theme.textSecondary }]}>
-          Pagado por {expense.paidBy} · entre {expense.splitBetween.length}
+          Pagado por {payerName} · entre {expense.splits.length}
         </Text>
       </View>
       <Text style={[styles.amount, { color: theme.text }]}>

@@ -1,28 +1,82 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
+import { supabase } from '@/lib/supabase';
 import type {
   Balance,
   CurrencyCode,
   Expense,
   ExpenseCategory,
   Group,
+  GroupMember,
   SettlementTransaction,
 } from '@/types/models';
 
-const STORAGE_KEY = 'fifty50_groups';
+const GROUP_SELECT = `
+  id, name, currency, created_at,
+  group_members ( id, user_id, invited_email, display_name ),
+  expenses (
+    id, description, amount, paid_by, category, date,
+    expense_splits ( group_member_id, share_amount )
+  )
+`;
+
+function mapGroup(row: any): Group {
+  return {
+    id: row.id,
+    name: row.name,
+    currency: row.currency,
+    createdAt: row.created_at,
+    members: (row.group_members ?? []).map(
+      (m: any): GroupMember => ({
+        id: m.id,
+        userId: m.user_id,
+        invitedEmail: m.invited_email,
+        displayName: m.display_name,
+      })
+    ),
+    expenses: (row.expenses ?? []).map(
+      (e: any): Expense => ({
+        id: e.id,
+        description: e.description,
+        amount: Number(e.amount),
+        paidBy: e.paid_by,
+        category: e.category,
+        date: e.date,
+        splits: (e.expense_splits ?? []).map((s: any) => ({
+          groupMemberId: s.group_member_id,
+          shareAmount: Number(s.share_amount),
+        })),
+      })
+    ),
+  };
+}
+
+// Splits amount evenly across memberIds in integer cents, then assigns the
+// leftover cents (from rounding) to the payer's own split — keeps the sum of
+// shares exactly equal to amount, which the DB's numeric(12,2) columns need.
+function computeEvenSplits(amount: number, memberIds: string[], paidBy: string) {
+  const totalCents = Math.round(amount * 100);
+  const n = memberIds.length;
+  const baseCents = Math.floor(totalCents / n);
+  const remainderCents = totalCents - baseCents * n;
+  const payerIndex = memberIds.indexOf(paidBy);
+  const remainderIndex = payerIndex >= 0 ? payerIndex : 0;
+
+  return memberIds.map((groupMemberId, i) => ({
+    groupMemberId,
+    shareAmount: (baseCents + (i === remainderIndex ? remainderCents : 0)) / 100,
+  }));
+}
 
 interface GroupsState {
   groups: Group[];
-  loadGroups: () => Promise<void>;
-  addGroup: (
-    name: string,
-    members: string[],
-    currency: CurrencyCode,
-    youAre: string
-  ) => void;
-  deleteGroup: (groupId: string) => void;
+  loading: boolean;
+  fetchGroups: () => Promise<void>;
+  fetchGroupDetail: (groupId: string) => Promise<Group | undefined>;
   getGroup: (groupId: string) => Group | undefined;
+  addGroup: (name: string, currency: CurrencyCode, displayName: string) => Promise<string>;
+  deleteGroup: (groupId: string) => Promise<void>;
+  addMember: (groupId: string, email: string, displayName: string) => Promise<void>;
   addExpense: (
     groupId: string,
     expense: {
@@ -32,79 +86,128 @@ interface GroupsState {
       splitBetween: string[];
       category: ExpenseCategory;
     }
-  ) => void;
-  calculateDebts: (groupId: string) => {
+  ) => Promise<void>;
+  calculateDebts: (group: Group) => {
     balances: Balance;
     transactions: SettlementTransaction[];
   };
 }
 
-async function persist(groups: Group[]) {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(groups));
-}
-
 export const useGroupsStore = create<GroupsState>((set, get) => ({
   groups: [],
+  loading: false,
 
-  loadGroups: async () => {
-    const data = await AsyncStorage.getItem(STORAGE_KEY);
-    if (data) {
-      set({ groups: JSON.parse(data) });
-    }
+  fetchGroups: async () => {
+    set({ loading: true });
+    const { data, error } = await supabase
+      .from('groups')
+      .select(GROUP_SELECT)
+      .order('created_at', { ascending: true });
+    set({ loading: false });
+    if (error) throw error;
+    set({ groups: (data ?? []).map(mapGroup) });
   },
 
-  addGroup: (name, members, currency, youAre) => {
-    const newGroup: Group = {
-      id: Date.now().toString(),
-      name,
-      members,
-      youAre,
-      currency,
-      expenses: [],
-      createdAt: new Date().toISOString(),
-    };
-    const groups = [...get().groups, newGroup];
-    set({ groups });
-    persist(groups);
-  },
-
-  deleteGroup: (groupId) => {
-    const groups = get().groups.filter((g) => g.id !== groupId);
-    set({ groups });
-    persist(groups);
+  fetchGroupDetail: async (groupId) => {
+    const { data, error } = await supabase
+      .from('groups')
+      .select(GROUP_SELECT)
+      .eq('id', groupId)
+      .single();
+    if (error) return undefined;
+    const group = mapGroup(data);
+    set((state) => ({
+      groups: state.groups.some((g) => g.id === group.id)
+        ? state.groups.map((g) => (g.id === group.id ? group : g))
+        : [...state.groups, group],
+    }));
+    return group;
   },
 
   getGroup: (groupId) => get().groups.find((g) => g.id === groupId),
 
-  addExpense: (groupId, expense) => {
-    const newExpense: Expense = {
-      id: Date.now().toString(),
-      date: new Date().toISOString(),
-      ...expense,
-    };
-    const groups = get().groups.map((group) =>
-      group.id === groupId
-        ? { ...group, expenses: [...group.expenses, newExpense] }
-        : group
-    );
-    set({ groups });
-    persist(groups);
+  addGroup: async (name, currency, displayName) => {
+    const { data, error } = await supabase.rpc('create_group_with_creator', {
+      p_name: name,
+      p_currency: currency,
+      p_display_name: displayName,
+    });
+    if (error) throw error;
+    await get().fetchGroups();
+    return data.id as string;
   },
 
-  calculateDebts: (groupId) => {
-    const group = get().getGroup(groupId);
-    if (!group) return { balances: {}, transactions: [] };
+  deleteGroup: async (groupId) => {
+    const { error } = await supabase.from('groups').delete().eq('id', groupId);
+    if (error) throw error;
+    set((state) => ({ groups: state.groups.filter((g) => g.id !== groupId) }));
+  },
 
+  addMember: async (groupId, email, displayName) => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, display_name')
+      .ilike('email', normalizedEmail)
+      .maybeSingle();
+
+    const resolvedDisplayName =
+      displayName.trim() || profile?.display_name || normalizedEmail.split('@')[0];
+
+    const { error } = profile
+      ? await supabase
+          .from('group_members')
+          .insert({ group_id: groupId, user_id: profile.id, display_name: resolvedDisplayName })
+      : await supabase
+          .from('group_members')
+          .insert({ group_id: groupId, invited_email: normalizedEmail, display_name: resolvedDisplayName });
+
+    if (error) throw error;
+    await get().fetchGroupDetail(groupId);
+  },
+
+  addExpense: async (groupId, expense) => {
+    const { data: userData } = await supabase.auth.getUser();
+    const createdBy = userData.user?.id;
+    if (!createdBy) throw new Error('No hay sesión activa.');
+
+    const { data: insertedExpense, error: expenseError } = await supabase
+      .from('expenses')
+      .insert({
+        group_id: groupId,
+        description: expense.description,
+        amount: expense.amount,
+        paid_by: expense.paidBy,
+        category: expense.category,
+        created_by: createdBy,
+      })
+      .select('id')
+      .single();
+    if (expenseError) throw expenseError;
+
+    const splits = computeEvenSplits(expense.amount, expense.splitBetween, expense.paidBy);
+    const { error: splitsError } = await supabase.from('expense_splits').insert(
+      splits.map((s) => ({
+        expense_id: insertedExpense.id,
+        group_member_id: s.groupMemberId,
+        share_amount: s.shareAmount,
+      }))
+    );
+    if (splitsError) throw splitsError;
+
+    await get().fetchGroupDetail(groupId);
+  },
+
+  calculateDebts: (group) => {
     const balances: Balance = {};
     group.members.forEach((member) => {
-      balances[member] = 0;
+      balances[member.id] = 0;
     });
 
     group.expenses.forEach((expense) => {
-      const share = expense.amount / expense.splitBetween.length;
-      balances[expense.paidBy] += expense.amount;
-      expense.splitBetween.forEach((person) => {
-        balances[person] -= share;
+      balances[expense.paidBy] = (balances[expense.paidBy] ?? 0) + expense.amount;
+      expense.splits.forEach((split) => {
+        balances[split.groupMemberId] = (balances[split.groupMemberId] ?? 0) - split.shareAmount;
       });
     });
 

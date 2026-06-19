@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 interface BottomSheetProps {
@@ -22,8 +23,10 @@ export function BottomSheet({ visible, title, onClose, children }: BottomSheetPr
           onPress={(e) => e.stopPropagation()}
         >
           <View style={styles.header}>
-            <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
-            <Pressable onPress={onClose} hitSlop={8}>
+            <Text style={[styles.title, { color: theme.text, fontFamily: Fonts.heading }]}>
+              {title}
+            </Text>
+            <Pressable onPress={onClose} hitSlop={8} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
               <Feather name="x" size={22} color={theme.textSecondary} />
             </Pressable>
           </View>
@@ -54,7 +57,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 19,
   },
 });

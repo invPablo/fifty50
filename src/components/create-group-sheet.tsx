@@ -14,53 +14,69 @@ interface CreateGroupSheetProps {
   onClose: () => void;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function CreateGroupSheet({ visible, onClose }: CreateGroupSheetProps) {
   const theme = useTheme();
   const router = useRouter();
   const addGroup = useGroupsStore((s) => s.addGroup);
+  const addMember = useGroupsStore((s) => s.addMember);
 
   const [name, setName] = useState('');
-  const [memberInput, setMemberInput] = useState('');
-  const [members, setMembers] = useState<string[]>([]);
-  const [youAre, setYouAre] = useState<string | null>(null);
+  const [yourDisplayName, setYourDisplayName] = useState('');
+  const [emailInput, setEmailInput] = useState('');
+  const [invites, setInvites] = useState<string[]>([]);
   const [currency, setCurrency] = useState<CurrencyCode>('EUR');
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   function reset() {
     setName('');
-    setMemberInput('');
-    setMembers([]);
-    setYouAre(null);
+    setYourDisplayName('');
+    setEmailInput('');
+    setInvites([]);
     setCurrency('EUR');
+    setError(null);
   }
 
-  function addMember() {
-    const trimmed = memberInput.trim();
-    if (!trimmed || members.includes(trimmed)) return;
-    setMembers([...members, trimmed]);
-    setMemberInput('');
-    if (!youAre) setYouAre(trimmed);
+  function addInvite() {
+    const trimmed = emailInput.trim().toLowerCase();
+    if (!EMAIL_RE.test(trimmed) || invites.includes(trimmed)) return;
+    setInvites([...invites, trimmed]);
+    setEmailInput('');
   }
 
-  function removeMember(member: string) {
-    setMembers(members.filter((m) => m !== member));
-    if (youAre === member) setYouAre(null);
+  function removeInvite(email: string) {
+    setInvites(invites.filter((e) => e !== email));
   }
 
-  function handleCreate() {
-    if (!name.trim() || members.length < 2 || !youAre) return;
-    addGroup(name.trim(), members, currency, youAre);
-    const groups = useGroupsStore.getState().groups;
-    const created = groups[groups.length - 1];
-    reset();
-    onClose();
-    router.push({ pathname: '/group/[id]', params: { id: created.id } });
+  async function handleCreate() {
+    if (!name.trim() || !yourDisplayName.trim() || invites.length === 0) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const groupId = await addGroup(name.trim(), currency, yourDisplayName.trim());
+      for (const email of invites) {
+        await addMember(groupId, email, '');
+      }
+      reset();
+      onClose();
+      router.push({ pathname: '/group/[id]', params: { id: groupId } });
+    } catch (e: any) {
+      setError(e.message ?? 'No se pudo crear el grupo.');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  const canCreate = name.trim().length > 0 && members.length >= 2 && !!youAre;
+  const canCreate =
+    name.trim().length > 0 && yourDisplayName.trim().length > 0 && invites.length > 0 && !submitting;
 
   return (
     <BottomSheet visible={visible} title="Nuevo grupo" onClose={onClose}>
       <ScrollView keyboardShouldPersistTaps="handled">
+        {error && <Text style={[styles.error, { color: theme.debt }]}>{error}</Text>}
+
         <Text style={[styles.label, { color: theme.textSecondary }]}>Nombre del grupo</Text>
         <TextInput
           value={name}
@@ -70,62 +86,53 @@ export function CreateGroupSheet({ visible, onClose }: CreateGroupSheetProps) {
           style={[styles.input, { color: theme.text, borderColor: theme.border }]}
         />
 
-        <Text style={[styles.label, { color: theme.textSecondary }]}>Miembros</Text>
+        <Text style={[styles.label, { color: theme.textSecondary }]}>
+          ¿Cómo te ven los demás en este grupo?
+        </Text>
+        <TextInput
+          value={yourDisplayName}
+          onChangeText={setYourDisplayName}
+          placeholder="Pablo"
+          placeholderTextColor={theme.textSecondary}
+          style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+        />
+
+        <Text style={[styles.label, { color: theme.textSecondary }]}>Invitar por email</Text>
         <View style={styles.memberInputRow}>
           <TextInput
-            value={memberInput}
-            onChangeText={setMemberInput}
-            placeholder="Nombre"
+            value={emailInput}
+            onChangeText={setEmailInput}
+            placeholder="amigo@ejemplo.com"
             placeholderTextColor={theme.textSecondary}
-            onSubmitEditing={addMember}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            onSubmitEditing={addInvite}
             style={[styles.input, styles.memberInput, { color: theme.text, borderColor: theme.border }]}
           />
           <Pressable
-            onPress={addMember}
-            style={[styles.addButton, { backgroundColor: theme.accent }]}
+            onPress={addInvite}
+            style={({ pressed }) => [styles.addButton, { backgroundColor: theme.accent, opacity: pressed ? 0.7 : 1 }]}
           >
             <Feather name="plus" size={20} color="#FFFFFF" />
           </Pressable>
         </View>
 
         <View style={styles.chipWrap}>
-          {members.map((member) => (
+          {invites.map((email) => (
             <Pressable
-              key={member}
-              onPress={() => removeMember(member)}
-              style={[styles.chip, { backgroundColor: theme.accentSoft }]}
+              key={email}
+              onPress={() => removeInvite(email)}
+              style={({ pressed }) => [styles.chip, { backgroundColor: theme.accentSoft, opacity: pressed ? 0.7 : 1 }]}
             >
-              <Text style={[styles.chipText, { color: theme.accent }]}>{member}</Text>
+              <Text style={[styles.chipText, { color: theme.accent }]}>{email}</Text>
               <Feather name="x" size={14} color={theme.accent} />
             </Pressable>
           ))}
         </View>
-
-        {members.length >= 2 && (
-          <>
-            <Text style={[styles.label, { color: theme.textSecondary }]}>¿Quién eres tú?</Text>
-            <View style={styles.chipWrap}>
-              {members.map((member) => {
-                const selected = youAre === member;
-                return (
-                  <Pressable
-                    key={member}
-                    onPress={() => setYouAre(member)}
-                    style={[
-                      styles.chip,
-                      {
-                        backgroundColor: selected ? theme.accent : theme.accentSoft,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.chipText, { color: selected ? '#FFFFFF' : theme.accent }]}>
-                      {member}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </>
+        {invites.length === 0 && (
+          <Text style={[styles.hint, { color: theme.textSecondary }]}>
+            Si esa persona aún no tiene cuenta, se unirá automáticamente al registrarse con ese email.
+          </Text>
         )}
 
         <Text style={[styles.label, { color: theme.textSecondary }]}>Moneda</Text>
@@ -136,9 +143,9 @@ export function CreateGroupSheet({ visible, onClose }: CreateGroupSheetProps) {
               <Pressable
                 key={c.code}
                 onPress={() => setCurrency(c.code)}
-                style={[
+                style={({ pressed }) => [
                   styles.chip,
-                  { backgroundColor: selected ? theme.accent : theme.accentSoft },
+                  { backgroundColor: selected ? theme.accent : theme.accentSoft, opacity: pressed ? 0.7 : 1 },
                 ]}
               >
                 <Text style={[styles.chipText, { color: selected ? '#FFFFFF' : theme.accent }]}>
@@ -152,12 +159,12 @@ export function CreateGroupSheet({ visible, onClose }: CreateGroupSheetProps) {
         <Pressable
           onPress={handleCreate}
           disabled={!canCreate}
-          style={[
+          style={({ pressed }) => [
             styles.createButton,
-            { backgroundColor: canCreate ? theme.accent : theme.border },
+            { backgroundColor: canCreate ? theme.accent : theme.border, opacity: pressed && canCreate ? 0.8 : 1 },
           ]}
         >
-          <Text style={styles.createButtonText}>Crear grupo</Text>
+          <Text style={styles.createButtonText}>{submitting ? 'Creando…' : 'Crear grupo'}</Text>
         </Pressable>
       </ScrollView>
     </BottomSheet>
@@ -177,6 +184,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
+  },
+  error: {
+    fontSize: 13,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  hint: {
+    fontSize: 12,
+    marginTop: 8,
   },
   memberInputRow: {
     flexDirection: 'row',

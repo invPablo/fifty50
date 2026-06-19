@@ -1,25 +1,34 @@
 import { Feather } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { Avatar } from '@/components/avatar';
+import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import type { SettlementTransaction } from '@/types/models';
+import type { GroupMember, SettlementTransaction } from '@/types/models';
 
 interface SettlementRowProps {
   transaction: SettlementTransaction;
   symbol: string;
+  membersById: Record<string, GroupMember>;
 }
 
-export function SettlementRow({ transaction, symbol }: SettlementRowProps) {
+export function SettlementRow({ transaction, symbol, membersById }: SettlementRowProps) {
   const theme = useTheme();
+  const from = membersById[transaction.from];
+  const to = membersById[transaction.to];
 
   return (
     <View style={[styles.row, { backgroundColor: theme.accentSoft }]}>
-      <Text style={[styles.text, { color: theme.text }]}>
-        <Text style={styles.bold}>{transaction.from}</Text> le paga a{' '}
-        <Text style={styles.bold}>{transaction.to}</Text>
-      </Text>
+      <View style={styles.identity}>
+        <Avatar id={transaction.from} name={from?.displayName ?? '?'} size={26} />
+        <Text style={[styles.text, { color: theme.text }]}>
+          <Text style={styles.bold}>{from?.displayName ?? '?'}</Text> le paga a{' '}
+          <Text style={styles.bold}>{to?.displayName ?? '?'}</Text>
+        </Text>
+        <Avatar id={transaction.to} name={to?.displayName ?? '?'} size={26} />
+      </View>
       <View style={styles.amountWrap}>
-        <Text style={[styles.amount, { color: theme.accent }]}>
+        <Text style={[styles.amount, { color: theme.accent, fontFamily: Fonts.bold }]}>
           {symbol}
           {transaction.amount.toFixed(2)}
         </Text>
@@ -38,9 +47,15 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 10,
   },
+  identity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    flexWrap: 'wrap',
+  },
   text: {
     fontSize: 14,
-    flex: 1,
   },
   bold: {
     fontWeight: '700',
@@ -52,6 +67,5 @@ const styles = StyleSheet.create({
   },
   amount: {
     fontSize: 15,
-    fontWeight: '700',
   },
 });

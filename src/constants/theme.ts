@@ -8,7 +8,9 @@ export const Colors = {
     accent: '#6C5CE7',
     accentSoft: '#EEEDFE',
     credit: '#00966F',
+    creditSoft: '#E1F3EC',
     debt: '#D8473F',
+    debtSoft: '#FBEAE8',
   },
   dark: {
     background: '#12121A',
@@ -19,8 +21,17 @@ export const Colors = {
     accent: '#7F77DD',
     accentSoft: '#26215C',
     credit: '#34D9A6',
+    creditSoft: '#193029',
     debt: '#F0867F',
+    debtSoft: '#332220',
   },
 };
 
 export type ThemeColors = typeof Colors.light;
+
+// Manrope for headings/amounts only — body text stays on the system font for
+// legibility and to keep the bundle small. Loaded via useFonts in _layout.tsx.
+export const Fonts = {
+  heading: 'Manrope_800ExtraBold',
+  bold: 'Manrope_700Bold',
+};

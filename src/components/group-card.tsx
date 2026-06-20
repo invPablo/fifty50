@@ -43,7 +43,7 @@ export function GroupCard({ group, onPress }: GroupCardProps) {
       ]}
     >
       <View style={[styles.iconWrap, { backgroundColor: accentColor + '22' }]}>
-        <Feather name="map-pin" size={20} color={accentColor} />
+        <Feather name={group.type === 'roommates' ? 'home' : 'map-pin'} size={20} color={accentColor} />
       </View>
       <Text style={[styles.name, { color: theme.text, fontFamily: Fonts.bold }]} numberOfLines={2}>
         {group.name}

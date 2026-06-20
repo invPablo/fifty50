@@ -8,22 +8,26 @@ import type {
   ExpenseCategory,
   Group,
   GroupMember,
+  GroupType,
+  Settlement,
   SettlementTransaction,
 } from '@/types/models';
 
 const GROUP_SELECT = `
-  id, name, currency, created_at,
+  id, name, currency, group_type, created_at,
   group_members ( id, user_id, invited_email, display_name ),
   expenses (
     id, description, amount, paid_by, category, date,
     expense_splits ( group_member_id, share_amount )
-  )
+  ),
+  settlements ( id, from_member_id, to_member_id, amount, note, date )
 `;
 
 function mapGroup(row: any): Group {
   return {
     id: row.id,
     name: row.name,
+    type: row.group_type,
     currency: row.currency,
     createdAt: row.created_at,
     members: (row.group_members ?? []).map(
@@ -46,6 +50,16 @@ function mapGroup(row: any): Group {
           groupMemberId: s.group_member_id,
           shareAmount: Number(s.share_amount),
         })),
+      })
+    ),
+    settlements: (row.settlements ?? []).map(
+      (s: any): Settlement => ({
+        id: s.id,
+        from: s.from_member_id,
+        to: s.to_member_id,
+        amount: Number(s.amount),
+        note: s.note,
+        date: s.date,
       })
     ),
   };
@@ -74,7 +88,12 @@ interface GroupsState {
   fetchGroups: () => Promise<void>;
   fetchGroupDetail: (groupId: string) => Promise<Group | undefined>;
   getGroup: (groupId: string) => Group | undefined;
-  addGroup: (name: string, currency: CurrencyCode, displayName: string) => Promise<string>;
+  addGroup: (
+    name: string,
+    currency: CurrencyCode,
+    displayName: string,
+    groupType: GroupType
+  ) => Promise<string>;
   deleteGroup: (groupId: string) => Promise<void>;
   addMember: (groupId: string, email: string, displayName: string) => Promise<void>;
   addExpense: (
@@ -86,6 +105,13 @@ interface GroupsState {
       splitBetween: string[];
       category: ExpenseCategory;
     }
+  ) => Promise<void>;
+  addSettlement: (
+    groupId: string,
+    fromMemberId: string,
+    toMemberId: string,
+    amount: number,
+    note?: string
   ) => Promise<void>;
   calculateDebts: (group: Group) => {
     balances: Balance;
@@ -126,11 +152,12 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
 
   getGroup: (groupId) => get().groups.find((g) => g.id === groupId),
 
-  addGroup: async (name, currency, displayName) => {
+  addGroup: async (name, currency, displayName, groupType) => {
     const { data, error } = await supabase.rpc('create_group_with_creator', {
       p_name: name,
       p_currency: currency,
       p_display_name: displayName,
+      p_group_type: groupType,
     });
     if (error) throw error;
     await get().fetchGroups();
@@ -138,7 +165,7 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
   },
 
   deleteGroup: async (groupId) => {
-    // Delete in order: expense_splits → expenses → group_members → group
+    // Delete in order: expense_splits → expenses → settlements → group_members → group
     // This ensures referential integrity even without cascading deletes
     const { error: splitsError } = await supabase
       .from('expense_splits')
@@ -156,6 +183,12 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
       .delete()
       .eq('group_id', groupId);
     if (expensesError) throw expensesError;
+
+    const { error: settlementsError } = await supabase
+      .from('settlements')
+      .delete()
+      .eq('group_id', groupId);
+    if (settlementsError) throw settlementsError;
 
     const { error: membersError } = await supabase
       .from('group_members')
@@ -227,6 +260,24 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
     await get().fetchGroupDetail(groupId);
   },
 
+  addSettlement: async (groupId, fromMemberId, toMemberId, amount, note) => {
+    const { data: userData } = await supabase.auth.getUser();
+    const createdBy = userData.user?.id;
+    if (!createdBy) throw new Error('No hay sesión activa.');
+
+    const { error } = await supabase.from('settlements').insert({
+      group_id: groupId,
+      from_member_id: fromMemberId,
+      to_member_id: toMemberId,
+      amount,
+      note: note || null,
+      created_by: createdBy,
+    });
+    if (error) throw error;
+
+    await get().fetchGroupDetail(groupId);
+  },
+
   calculateDebts: (group) => {
     const balances: Balance = {};
     group.members.forEach((member) => {
@@ -238,6 +289,13 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
       expense.splits.forEach((split) => {
         balances[split.groupMemberId] = (balances[split.groupMemberId] ?? 0) - split.shareAmount;
       });
+    });
+
+    // A recorded payment from A to B mirrors a debt: it raises A's balance
+    // (they paid down what they owed) and lowers B's (they were paid back).
+    group.settlements.forEach((settlement) => {
+      balances[settlement.from] = (balances[settlement.from] ?? 0) + settlement.amount;
+      balances[settlement.to] = (balances[settlement.to] ?? 0) - settlement.amount;
     });
 
     const debtors = Object.entries(balances)

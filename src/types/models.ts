@@ -1,5 +1,7 @@
 export type CurrencyCode = 'EUR' | 'USD' | 'GBP';
 
+export type GroupType = 'trip' | 'roommates';
+
 export type ExpenseCategory =
   | 'food'
   | 'transport'
@@ -41,9 +43,11 @@ export interface Expense {
 export interface Group {
   id: string;
   name: string;
+  type: GroupType;
   members: GroupMember[];
   currency: CurrencyCode;
   expenses: Expense[];
+  settlements: Settlement[];
   createdAt: string;
 }
 
@@ -55,4 +59,16 @@ export interface SettlementTransaction {
   from: string; // group_members.id
   to: string; // group_members.id
   amount: number;
+}
+
+// A recorded real-world payment between two members (Bizum, cash...).
+// Same from/to/amount shape as SettlementTransaction so SettlementRow can
+// render both suggested and recorded settlements.
+export interface Settlement {
+  id: string;
+  from: string; // group_members.id
+  to: string; // group_members.id
+  amount: number;
+  note: string | null;
+  date: string;
 }

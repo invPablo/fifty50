@@ -8,9 +8,11 @@ import * as Clipboard from 'expo-clipboard';
 import { AddExpenseSheet } from '@/components/add-expense-sheet';
 import { BalanceRow } from '@/components/balance-row';
 import { ExpenseRow } from '@/components/expense-row';
+import { RecordPaymentSheet } from '@/components/record-payment-sheet';
 import { SettlementRow } from '@/components/settlement-row';
 import { currencySymbol } from '@/constants/currencies';
 import { Fonts } from '@/constants/theme';
+import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { useGroupsStore } from '@/store/use-groups-store';
 
@@ -18,11 +20,13 @@ export default function GroupDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
   const router = useRouter();
+  const { session } = useSession();
   const group = useGroupsStore((s) => s.getGroup(id));
   const fetchGroupDetail = useGroupsStore((s) => s.fetchGroupDetail);
   const calculateDebts = useGroupsStore((s) => s.calculateDebts);
   const deleteGroup = useGroupsStore((s) => s.deleteGroup);
   const [sheetVisible, setSheetVisible] = useState(false);
+  const [paymentSheetVisible, setPaymentSheetVisible] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   useFocusEffect(
@@ -47,6 +51,16 @@ export default function GroupDetailScreen() {
   const { balances, transactions } = calculateDebts(group);
   const symbol = currencySymbol(group.currency);
   const groupId = group.id;
+  const currentMemberId = group.members.find((m) => m.userId === session?.user.id)?.id ?? '';
+
+  const historial = [
+    ...group.expenses.map((expense) => ({ date: expense.date, kind: 'expense' as const, expense })),
+    ...group.settlements.map((settlement) => ({
+      date: settlement.date,
+      kind: 'settlement' as const,
+      settlement,
+    })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   async function handleDelete() {
     try {
@@ -149,27 +163,41 @@ export default function GroupDetailScreen() {
           </View>
         ) : null}
 
-        <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Gastos</Text>
+        <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Historial</Text>
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          {group.expenses.length === 0 ? (
+          {historial.length === 0 ? (
             <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-              Todavía no hay gastos en este grupo.
+              Todavía no hay movimientos en este grupo.
             </Text>
           ) : (
-            group.expenses
-              .slice()
-              .reverse()
-              .map((expense) => (
+            historial.map((item) =>
+              item.kind === 'expense' ? (
                 <ExpenseRow
-                  key={expense.id}
-                  expense={expense}
+                  key={`expense-${item.expense.id}`}
+                  expense={item.expense}
                   symbol={symbol}
                   membersById={membersById}
                 />
-              ))
+              ) : (
+                <SettlementRow
+                  key={`settlement-${item.settlement.id}`}
+                  transaction={item.settlement}
+                  symbol={symbol}
+                  membersById={membersById}
+                  variant="recorded"
+                />
+              )
+            )
           )}
         </View>
       </ScrollView>
+
+      <Pressable
+        onPress={() => setPaymentSheetVisible(true)}
+        style={({ pressed }) => [styles.fab, styles.fabPayment, { backgroundColor: theme.credit, opacity: pressed ? 0.85 : 1 }]}
+      >
+        <Feather name="send" size={22} color="#FFFFFF" />
+      </Pressable>
 
       <Pressable
         onPress={() => setSheetVisible(true)}
@@ -184,6 +212,15 @@ export default function GroupDetailScreen() {
         groupId={group.id}
         members={group.members}
         currency={group.currency}
+      />
+
+      <RecordPaymentSheet
+        visible={paymentSheetVisible}
+        onClose={() => setPaymentSheetVisible(false)}
+        groupId={group.id}
+        members={group.members}
+        currency={group.currency}
+        defaultFromId={currentMemberId}
       />
     </SafeAreaView>
   );
@@ -260,5 +297,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     boxShadow: '0px 4px 8px rgba(0,0,0,0.2)',
+  },
+  fabPayment: {
+    right: 92,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
   },
 });

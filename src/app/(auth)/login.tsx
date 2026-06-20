@@ -33,7 +33,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <Text style={[styles.title, { color: theme.text }]}>Fifty50</Text>
+      <Text style={[styles.title, { color: theme.text }]}>Tranzfr</Text>
       <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Inicia sesión</Text>
 
       {error && <Text style={[styles.error, { color: theme.debt }]}>{error}</Text>}

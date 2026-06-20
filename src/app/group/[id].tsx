@@ -131,7 +131,7 @@ export default function GroupDetailScreen() {
   }
 
   async function handleShare() {
-    const link = `https://splitto.app/join/${groupId}`;
+    const link = `https://tranzfr.app/join/${groupId}`;
     try {
       await Clipboard.setStringAsync(link);
       Alert.alert('Link copiado', `Link compartible copiado al portapapeles:\n\n${link}`);

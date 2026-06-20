@@ -1,16 +1,17 @@
 {
   "expo": {
-    "name": "Fifty50",
-    "slug": "Fifty50",
+    "name": "Tranzfr",
+    "slug": "tranzfr",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "fifty50",
+    "scheme": "tranzfr",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.pablo.tranzfr",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

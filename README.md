@@ -1,4 +1,4 @@
-# Splitto — Split Bills App 💰
+# Tranzfr — Split Bills App 💰
 
 Una app mobile para dividir gastos de forma sencilla y clara.
 
@@ -26,7 +26,7 @@ Una app mobile para dividir gastos de forma sencilla y clara.
 
 ### 1. Instalar dependencias
 ```bash
-cd Splitto
+cd Tranzfr
 npm install
 ```
 
@@ -50,7 +50,7 @@ Para publicar necesitarás:
 ## Estructura del Proyecto
 
 ```
-Splitto/
+Tranzfr/
 ├── App.js              # Entrada principal
 ├── store.js            # Zustand state management
 ├── screens/

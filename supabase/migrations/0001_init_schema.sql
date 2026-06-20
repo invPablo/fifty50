@@ -1,4 +1,4 @@
--- Fifty50: initial multi-user schema (profiles, groups, group_members, expenses, expense_splits)
+-- Tranzfr: initial multi-user schema (profiles, groups, group_members, expenses, expense_splits)
 -- Apply via Supabase SQL editor or `supabase db push`. Idempotent-ish via IF NOT EXISTS / OR REPLACE
 -- where reasonable, but tables are not — running twice on the same project will fail on table creation.
 

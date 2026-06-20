@@ -1,4 +1,4 @@
--- Fifty50: roommates group type + recorded payments (settlements)
+-- Tranzfr: roommates group type + recorded payments (settlements)
 -- Apply via Supabase SQL editor after 0001_init_schema.sql.
 
 -- ============================================================

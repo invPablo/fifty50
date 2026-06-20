@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
+import { PaywallSheet } from '@/components/paywall-sheet';
 import { Currencies } from '@/constants/currencies';
 import { useTheme } from '@/hooks/use-theme';
 import { useGroupsStore } from '@/store/use-groups-store';
@@ -35,6 +36,7 @@ export function CreateGroupSheet({ visible, onClose }: CreateGroupSheetProps) {
   const [groupType, setGroupType] = useState<GroupType>('trip');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   function reset() {
     setName('');
@@ -70,7 +72,11 @@ export function CreateGroupSheet({ visible, onClose }: CreateGroupSheetProps) {
       onClose();
       router.push({ pathname: '/group/[id]', params: { id: groupId } });
     } catch (e: any) {
-      setError(e.message ?? 'No se pudo crear el grupo.');
+      if (e.message?.includes('premium_required')) {
+        setShowPaywall(true);
+      } else {
+        setError(e.message ?? 'No se pudo crear el grupo.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -79,7 +85,8 @@ export function CreateGroupSheet({ visible, onClose }: CreateGroupSheetProps) {
   const canCreate = name.trim().length > 0 && yourDisplayName.trim().length > 0 && !submitting;
 
   return (
-    <BottomSheet visible={visible} title="Nuevo grupo" onClose={onClose}>
+    <>
+      <BottomSheet visible={visible} title="Nuevo grupo" onClose={onClose}>
       <ScrollView keyboardShouldPersistTaps="handled">
         {error && <Text style={[styles.error, { color: theme.debt }]}>{error}</Text>}
 
@@ -194,7 +201,9 @@ export function CreateGroupSheet({ visible, onClose }: CreateGroupSheetProps) {
           <Text style={styles.createButtonText}>{submitting ? 'Creando…' : 'Crear grupo'}</Text>
         </Pressable>
       </ScrollView>
-    </BottomSheet>
+      </BottomSheet>
+      <PaywallSheet visible={showPaywall} onClose={() => setShowPaywall(false)} />
+    </>
   );
 }
 

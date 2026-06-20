@@ -1,6 +1,6 @@
-import { GlassView } from 'expo-glass-effect';
-import { Link, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { GlassView } from "expo-glass-effect";
+import { Link, useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -15,14 +15,14 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Fonts } from '@/constants/theme';
+import { Fonts } from "@/constants/theme";
 
-const LOGO_WORDMARK = require('../../../assets/images/logo-wordmark.png');
+const LOGO_WORDMARK = require("../../../assets/images/logo-wordmark.png");
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 interface Slide {
   image: ImageSourcePropType;
@@ -31,33 +31,33 @@ interface Slide {
 
 const SLIDES: Slide[] = [
   {
-    image: require('../../../assets/images/onboarding/friends.jpg'),
-    title: 'Divide gastos con amigos al instante',
+    image: require("../../../assets/images/onboarding/friends.jpg"),
+    title: "Divide gastos con amigos al instante",
   },
   {
-    image: require('../../../assets/images/onboarding/trip.jpg'),
-    title: 'Organiza cualquier viaje o piso compartido',
+    image: require("../../../assets/images/onboarding/trip.jpg"),
+    title: "Organiza cualquier viaje o piso compartido",
   },
   {
-    image: require('../../../assets/images/onboarding/explore.jpg'),
-    title: 'Explora ciudades nuevas sin perder la cuenta',
+    image: require("../../../assets/images/onboarding/explore.jpg"),
+    title: "Explora ciudades nuevas sin perder la cuenta",
   },
   {
-    image: require('../../../assets/images/onboarding/escape.jpg'),
-    title: 'Desde una escapada de finde hasta el viaje de tu vida',
+    image: require("../../../assets/images/onboarding/escape.jpg"),
+    title: "Desde una escapada de finde hasta el viaje de tu vida",
   },
   {
-    image: require('../../../assets/images/onboarding/flamingo.jpg'),
-    title: 'Disfruta del viaje, nosotros llevamos las cuentas',
+    image: require("../../../assets/images/onboarding/flamingo.jpg"),
+    title: "Disfruta del viaje, nosotros llevamos las cuentas",
   },
   {
-    image: require('../../../assets/images/onboarding/settled.jpg'),
-    title: 'Saldad cuentas sin líos ni números',
+    image: require("../../../assets/images/onboarding/settled.jpg"),
+    title: "Saldad cuentas sin líos ni números",
   },
 ];
 
-const AUTO_ADVANCE_MS = 2000;
-const isIOS = Platform.OS === 'ios';
+const AUTO_ADVANCE_MS = 4000;
+const isIOS = Platform.OS === "ios";
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -100,11 +100,20 @@ export default function WelcomeScreen() {
         style={StyleSheet.absoluteFill}
       >
         {SLIDES.map((slide, i) => (
-          <ImageBackground key={i} source={slide.image} style={styles.slide} resizeMode="cover" />
+          <ImageBackground
+            key={i}
+            source={slide.image}
+            style={styles.slide}
+            resizeMode="cover"
+          />
         ))}
       </ScrollView>
 
-      <SafeAreaView style={styles.overlay} edges={['top', 'bottom']} pointerEvents="box-none">
+      <SafeAreaView
+        style={styles.overlay}
+        edges={["top", "bottom"]}
+        pointerEvents="box-none"
+      >
         <Animated.View
           style={[
             styles.logoRow,
@@ -112,7 +121,10 @@ export default function WelcomeScreen() {
               opacity: logoAnim,
               transform: [
                 {
-                  scale: logoAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }),
+                  scale: logoAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.7, 1],
+                  }),
                 },
               ],
             },
@@ -123,7 +135,11 @@ export default function WelcomeScreen() {
             glassEffectStyle="regular"
             tintColor="rgba(0,0,0,0.25)"
           >
-            <Image source={LOGO_WORDMARK} style={styles.logoWordmark} resizeMode="contain" />
+            <Image
+              source={LOGO_WORDMARK}
+              style={styles.logoWordmark}
+              resizeMode="contain"
+            />
           </GlassView>
         </Animated.View>
 
@@ -145,7 +161,8 @@ export default function WelcomeScreen() {
                 style={[
                   styles.dot,
                   {
-                    backgroundColor: i === index ? '#FFFFFF' : 'rgba(255,255,255,0.4)',
+                    backgroundColor:
+                      i === index ? "#FFFFFF" : "rgba(255,255,255,0.4)",
                     width: i === index ? 22 : 8,
                   },
                 ]}
@@ -154,14 +171,18 @@ export default function WelcomeScreen() {
           </View>
 
           <Pressable
-            onPress={() => router.push('/signup')}
-            style={({ pressed }) => [styles.button, { opacity: pressed ? 0.85 : 1 }]}
+            onPress={() => router.push("/signup")}
+            style={({ pressed }) => [
+              styles.button,
+              { opacity: pressed ? 0.85 : 1 },
+            ]}
           >
             <Text style={styles.buttonText}>Empezar viaje</Text>
           </Pressable>
 
           <Link href="/login" style={styles.loginLink}>
-            ¿Ya tienes cuenta? <Text style={styles.loginLinkStrong}>Iniciar sesión</Text>
+            ¿Ya tienes cuenta?{" "}
+            <Text style={styles.loginLinkStrong}>Iniciar sesión</Text>
           </Link>
         </GlassView>
       </SafeAreaView>
@@ -172,29 +193,29 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: "#000000",
   },
   slide: {
     width: SCREEN_WIDTH,
-    height: '100%',
+    height: "100%",
   },
   overlay: {
     flex: 1,
   },
   glassFallback: {
-    backgroundColor: 'rgba(20,20,28,0.55)',
+    backgroundColor: "rgba(20,20,28,0.55)",
   },
   logoRow: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingTop: 12,
   },
   logoPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   logoWordmark: {
     width: 75,
@@ -210,17 +231,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 28,
     paddingBottom: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   slideTitle: {
     fontSize: 21,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 28,
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
   dots: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     gap: 6,
     marginTop: 16,
   },
@@ -231,23 +252,23 @@ const styles = StyleSheet.create({
   button: {
     borderRadius: 16,
     paddingVertical: 16,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 22,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   buttonText: {
-    color: '#16161D',
+    color: "#16161D",
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   loginLink: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 13,
     marginTop: 16,
-    color: 'rgba(255,255,255,0.8)',
+    color: "rgba(255,255,255,0.8)",
   },
   loginLinkStrong: {
-    color: '#FFFFFF',
-    fontWeight: '700',
+    color: "#FFFFFF",
+    fontWeight: "700",
   },
 });

@@ -16,13 +16,38 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Fonts } from "@/constants/theme";
-import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/lib/supabase";
 
 const isIOS = Platform.OS === "ios";
+const ACCENT = "#7F77DD";
+const GRADIENT_STEPS = 10;
+
+function ScrimGradient() {
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {Array.from({ length: GRADIENT_STEPS }).map((_, i) => {
+        const t = i / (GRADIENT_STEPS - 1);
+        const opacity = 0.1 + 0.5 * Math.pow(t, 1.4);
+        return (
+          <View
+            key={i}
+            style={{
+              position: "absolute",
+              top: `${(i / GRADIENT_STEPS) * 100}%`,
+              left: 0,
+              right: 0,
+              height: `${100 / GRADIENT_STEPS}%`,
+              backgroundColor: "#000",
+              opacity,
+            }}
+          />
+        );
+      })}
+    </View>
+  );
+}
 
 export default function LoginScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -49,7 +74,30 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.root}>
+      <ImageBackground
+        source={require("../../../assets/images/onboarding/login-hero.jpg")}
+        style={StyleSheet.absoluteFill}
+        resizeMode="cover"
+      >
+        <ScrimGradient />
+      </ImageBackground>
+
       <SafeAreaView style={styles.flex} edges={["top", "bottom"]}>
+        <View style={styles.logoRow}>
+          <GlassView
+            style={[styles.logoPill, !isIOS && styles.glassFallback]}
+            glassEffectStyle="regular"
+            tintColor="rgba(0,0,0,0.25)"
+          >
+            <View style={styles.logoMark}>
+              <Feather name="repeat" size={16} color="#FFFFFF" />
+            </View>
+            <Text style={[styles.logoText, { fontFamily: Fonts.heading }]}>
+              Tranzfr
+            </Text>
+          </GlassView>
+        </View>
+
         <KeyboardAvoidingView
           style={styles.flex}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -58,79 +106,41 @@ export default function LoginScreen() {
             contentContainerStyle={styles.scroll}
             keyboardShouldPersistTaps="handled"
           >
-            <ImageBackground
-              source={require("../../../assets/images/onboarding/login-hero.jpg")}
-              style={styles.hero}
-              resizeMode="cover"
+            <GlassView
+              style={[styles.card, !isIOS && styles.glassFallback]}
+              glassEffectStyle="regular"
+              tintColor="rgba(0,0,0,0.35)"
             >
-              <View style={styles.heroScrim} />
-
-              <GlassView
-                style={[styles.logoPill, !isIOS && styles.glassFallback]}
-                glassEffectStyle="regular"
-                tintColor="rgba(0,0,0,0.25)"
-              >
-                <Feather name="repeat" size={28} color="#FFFFFF" />
-              </GlassView>
-              <Text style={[styles.heroTitle, { fontFamily: Fonts.heading }]}>
-                Tranzfr
-              </Text>
-              <Text style={styles.heroTagline}>Comparte gastos sin líos</Text>
-            </ImageBackground>
-
-            <View style={[styles.card, { backgroundColor: theme.card }]}>
-              <Text
-                style={[
-                  styles.cardTitle,
-                  { color: theme.text, fontFamily: Fonts.heading },
-                ]}
-              >
+              <Text style={[styles.cardTitle, { fontFamily: Fonts.heading }]}>
                 Inicia sesión
               </Text>
 
-              {error && (
-                <Text style={[styles.error, { color: theme.debt }]}>
-                  {error}
-                </Text>
-              )}
+              {error && <Text style={styles.error}>{error}</Text>}
 
-              <Text style={[styles.label, { color: theme.textSecondary }]}>
-                Email
-              </Text>
-              <View
-                style={[styles.inputWrapper, { borderColor: theme.border }]}
-              >
-                <Feather name="mail" size={18} color={theme.textSecondary} />
+              <Text style={styles.label}>Email</Text>
+              <View style={styles.inputWrapper}>
+                <Feather name="mail" size={18} color="rgba(255,255,255,0.7)" />
                 <TextInput
                   value={email}
                   onChangeText={setEmail}
                   placeholder="Tu email"
-                  placeholderTextColor={theme.textSecondary}
+                  placeholderTextColor="rgba(255,255,255,0.5)"
                   autoCapitalize="none"
                   keyboardType="email-address"
-                  style={[styles.input, { color: theme.text }]}
+                  style={styles.input}
                 />
               </View>
 
-              <Text
-                style={[
-                  styles.label,
-                  { color: theme.textSecondary, marginTop: 16 },
-                ]}
-              >
-                Contraseña
-              </Text>
-              <View
-                style={[styles.inputWrapper, { borderColor: theme.border }]}
-              >
-                <Feather name="lock" size={18} color={theme.textSecondary} />
+              <Text style={[styles.label, { marginTop: 16 }]}>Contraseña</Text>
+              <View style={styles.inputWrapper}>
+                <Feather name="lock" size={18} color="rgba(255,255,255,0.7)" />
                 <TextInput
                   value={password}
                   onChangeText={setPassword}
                   placeholder="••••••••"
-                  placeholderTextColor={theme.textSecondary}
+                  placeholderTextColor="rgba(255,255,255,0.5)"
                   secureTextEntry={!showPassword}
-                  style={[styles.input, { color: theme.text }]}
+                  style={styles.input}
                 />
                 <Pressable
                   onPress={() => setShowPassword(!showPassword)}
@@ -140,7 +150,7 @@ export default function LoginScreen() {
                   <Feather
                     name={showPassword ? "eye" : "eye-off"}
                     size={18}
-                    color={theme.textSecondary}
+                    color="rgba(255,255,255,0.7)"
                   />
                 </Pressable>
               </View>
@@ -151,35 +161,32 @@ export default function LoginScreen() {
                 style={({ pressed }) => [
                   styles.button,
                   {
-                    backgroundColor: canSubmit ? theme.accent : theme.border,
+                    backgroundColor: canSubmit ? "#FFFFFF" : "rgba(255,255,255,0.3)",
                     opacity: pressed && canSubmit ? 0.85 : 1,
                   },
                 ]}
               >
-                <Text style={styles.buttonText}>
+                <Text
+                  style={[
+                    styles.buttonText,
+                    { color: canSubmit ? "#16161D" : "rgba(255,255,255,0.7)" },
+                  ]}
+                >
                   {loading ? "Entrando…" : "Iniciar sesión"}
                 </Text>
               </Pressable>
 
-              <Link
-                href="/forgot-password"
-                style={[styles.link, { color: theme.accent }]}
-              >
+              <Link href="/forgot-password" style={styles.link}>
                 ¿Olvidaste tu contraseña?
               </Link>
 
               <View style={styles.footer}>
-                <Text style={{ color: theme.textSecondary }}>
-                  ¿No tienes cuenta?{" "}
-                </Text>
-                <Link
-                  href="/signup"
-                  style={[styles.link, { color: theme.accent }]}
-                >
+                <Text style={styles.footerText}>¿No tienes cuenta? </Text>
+                <Link href="/signup" style={styles.link}>
                   Crear cuenta
                 </Link>
               </View>
-            </View>
+            </GlassView>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -197,64 +204,61 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flexGrow: 1,
+    justifyContent: "center",
+    paddingHorizontal: 22,
   },
-  hero: {
-    paddingTop: 36,
-    paddingBottom: 48,
+  logoRow: {
     alignItems: "center",
-    overflow: "hidden",
-  },
-  heroScrim: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    paddingTop: 12,
   },
   logoPill: {
-    width: 64,
-    height: 64,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
     borderRadius: 20,
+    overflow: "hidden",
+  },
+  logoMark: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    backgroundColor: "rgba(255,255,255,0.25)",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 16,
-    overflow: "hidden",
+  },
+  logoText: {
+    fontSize: 16,
+    color: "#FFFFFF",
   },
   glassFallback: {
     backgroundColor: "rgba(20,20,28,0.55)",
   },
-  heroTitle: {
-    fontSize: 28,
-    color: "#FFFFFF",
-  },
-  heroTagline: {
-    fontSize: 14,
-    color: "rgba(255,255,255,0.85)",
-    marginTop: 4,
-  },
   card: {
-    flexGrow: 1,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    paddingHorizontal: 28,
-    paddingTop: 32,
-    paddingBottom: 32,
+    borderRadius: 28,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 28,
+    overflow: "hidden",
   },
   cardTitle: {
     fontSize: 20,
+    color: "#FFFFFF",
     marginBottom: 20,
   },
   label: {
     fontSize: 13,
     fontWeight: "600",
     marginBottom: 8,
+    color: "rgba(255,255,255,0.75)",
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
     borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
     borderRadius: 14,
     paddingHorizontal: 14,
     height: 50,
@@ -262,11 +266,13 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 15,
+    color: "#FFFFFF",
   },
   error: {
     fontSize: 13,
     marginBottom: 12,
     textAlign: "center",
+    color: "#F0867F",
   },
   button: {
     borderRadius: 16,
@@ -275,7 +281,6 @@ const styles = StyleSheet.create({
     marginTop: 28,
   },
   buttonText: {
-    color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
   },
@@ -284,10 +289,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
     marginTop: 18,
+    color: ACCENT,
   },
   footer: {
     flexDirection: "row",
     justifyContent: "center",
     marginTop: 22,
+  },
+  footerText: {
+    color: "rgba(255,255,255,0.75)",
   },
 });

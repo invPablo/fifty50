@@ -37,6 +37,18 @@ const SLIDES: Slide[] = [
     title: 'Organiza cualquier viaje o piso compartido',
   },
   {
+    image: require('../../../assets/images/onboarding/explore.jpg'),
+    title: 'Explora ciudades nuevas sin perder la cuenta',
+  },
+  {
+    image: require('../../../assets/images/onboarding/escape.jpg'),
+    title: 'Desde una escapada de finde hasta el viaje de tu vida',
+  },
+  {
+    image: require('../../../assets/images/onboarding/flamingo.jpg'),
+    title: 'Disfruta del viaje, nosotros llevamos las cuentas',
+  },
+  {
     image: require('../../../assets/images/onboarding/settled.jpg'),
     title: 'Saldad cuentas sin líos ni números',
   },
@@ -44,6 +56,32 @@ const SLIDES: Slide[] = [
 
 const AUTO_ADVANCE_MS = 2000;
 const isIOS = Platform.OS === 'ios';
+const GRADIENT_STEPS = 10;
+
+function ScrimGradient() {
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {Array.from({ length: GRADIENT_STEPS }).map((_, i) => {
+        const t = i / (GRADIENT_STEPS - 1);
+        const opacity = 0.05 + 0.55 * Math.pow(t, 1.4);
+        return (
+          <View
+            key={i}
+            style={{
+              position: 'absolute',
+              top: `${(i / GRADIENT_STEPS) * 100}%`,
+              left: 0,
+              right: 0,
+              height: `${100 / GRADIENT_STEPS}%`,
+              backgroundColor: '#000',
+              opacity,
+            }}
+          />
+        );
+      })}
+    </View>
+  );
+}
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -87,8 +125,7 @@ export default function WelcomeScreen() {
       >
         {SLIDES.map((slide, i) => (
           <ImageBackground key={i} source={slide.image} style={styles.slide} resizeMode="cover">
-            <View style={styles.scrim} />
-            <View style={styles.scrimBottom} />
+            <ScrimGradient />
           </ImageBackground>
         ))}
       </ScrollView>
@@ -169,22 +206,6 @@ const styles = StyleSheet.create({
   slide: {
     width: SCREEN_WIDTH,
     height: '100%',
-  },
-  scrim: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '45%',
-    backgroundColor: 'rgba(0,0,0,0.2)',
-  },
-  scrimBottom: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '55%',
-    backgroundColor: 'rgba(0,0,0,0.45)',
   },
   overlay: {
     flex: 1,

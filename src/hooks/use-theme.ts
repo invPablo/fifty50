@@ -1,8 +1,7 @@
-import { useColorScheme } from 'react-native';
-
 import { Colors } from '@/constants/theme';
 
+// Tranzfr always uses the light (white/blue/graphite) brand palette,
+// regardless of the system color scheme — there is no dark mode design yet.
 export function useTheme() {
-  const scheme = useColorScheme();
-  return Colors[scheme === 'dark' ? 'dark' : 'light'];
+  return Colors.light;
 }

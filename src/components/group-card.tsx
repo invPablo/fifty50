@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
 import { currencySymbol } from '@/constants/currencies';
@@ -15,8 +15,10 @@ interface GroupCardProps {
   onPress: () => void;
 }
 
-export const GROUP_CARD_WIDTH = 280;
-export const GROUP_CARD_HEIGHT = 340;
+// One dominant card per screen with the next one peeking at the edge,
+// rather than two cards side by side.
+export const GROUP_CARD_WIDTH = Math.min(Dimensions.get('window').width - 96, 340);
+export const GROUP_CARD_HEIGHT = 360;
 
 export function GroupCard({ group, onPress }: GroupCardProps) {
   const { session } = useSession();

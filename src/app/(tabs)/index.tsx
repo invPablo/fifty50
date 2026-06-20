@@ -23,6 +23,9 @@ export default function GroupsListScreen() {
   const [sheetVisible, setSheetVisible] = useState(false);
   const [paywallVisible, setPaywallVisible] = useState(false);
 
+  const userName =
+    session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || 'ahí';
+
   const emailVerificationDays = session?.user?.created_at
     ? getDaysUntilExpiry(session.user.created_at)
     : null;
@@ -56,17 +59,15 @@ export default function GroupsListScreen() {
 
       <View style={styles.header}>
         <View style={[styles.headerGlow, { backgroundColor: theme.accent }]} pointerEvents="none" />
-        <Text style={[styles.title, { color: theme.text, fontFamily: Fonts.heading }]}>
-          Tus grupos
-        </Text>
+        <View>
+          <Text style={[styles.title, { color: theme.text, fontFamily: Fonts.heading }]}>
+            Hola, {userName}
+          </Text>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+            Bienvenido a Tranzfr
+          </Text>
+        </View>
         <View style={styles.headerActions}>
-          <Pressable
-            onPress={() => router.push('/profile')}
-            hitSlop={8}
-            style={({ pressed }) => [styles.iconButton, { opacity: pressed ? 0.6 : 1 }]}
-          >
-            <Feather name="user" size={20} color={theme.textSecondary} />
-          </Pressable>
           <View style={styles.fabGlowWrap}>
             <View style={[styles.fabGlow, { backgroundColor: theme.accent }]} />
             <Pressable
@@ -168,7 +169,11 @@ const styles = StyleSheet.create({
     opacity: 0.15,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
+  },
+  subtitle: {
+    fontSize: 13,
+    marginTop: 2,
   },
   headerActions: {
     flexDirection: 'row',
@@ -203,7 +208,7 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: 20,
     paddingTop: 8,
-    paddingBottom: 24,
+    paddingBottom: 110,
   },
   row: {
     gap: 12,

@@ -25,16 +25,9 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          style={({ pressed }) => [styles.backButton, { opacity: pressed ? 0.6 : 1 }]}
-        >
-          <Feather name="chevron-left" size={24} color={theme.text} />
-        </Pressable>
         <Text style={[styles.headerTitle, { color: theme.text, fontFamily: Fonts.heading }]}>
           Mi perfil
         </Text>
-        <View style={styles.placeholder} />
       </View>
 
       <View style={styles.content}>
@@ -141,28 +134,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
   },
-  backButton: {
-    padding: 4,
-  },
   headerTitle: {
     fontSize: 18,
-    flex: 1,
-    textAlign: 'center',
-  },
-  placeholder: {
-    width: 32,
   },
   content: {
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 24,
+    paddingBottom: 100,
   },
   profileCard: {
     alignItems: 'center',

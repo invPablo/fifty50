@@ -1,7 +1,9 @@
-import { Feather } from '@expo/vector-icons';
-import { Link, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { Feather } from "@expo/vector-icons";
+import { GlassView } from "expo-glass-effect";
+import { Link, useRouter } from "expo-router";
+import { useState } from "react";
 import {
+  ImageBackground,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -10,18 +12,20 @@ import {
   Text,
   TextInput,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Fonts } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
-import { supabase } from '@/lib/supabase';
+import { Fonts } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
+import { supabase } from "@/lib/supabase";
+
+const isIOS = Platform.OS === "ios";
 
 export default function LoginScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -38,44 +42,69 @@ export default function LoginScreen() {
       setError(signInError.message);
       return;
     }
-    router.replace('/');
+    router.replace("/");
   }
 
   const canSubmit = email.trim().length > 0 && password.length > 0 && !loading;
 
   return (
-    <View style={[styles.root, { backgroundColor: theme.accent }]}>
-      <SafeAreaView style={styles.flex} edges={['top', 'bottom']}>
+    <View style={styles.root}>
+      <SafeAreaView style={styles.flex} edges={["top", "bottom"]}>
         <KeyboardAvoidingView
           style={styles.flex}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-            <View style={styles.hero}>
-              <View style={[styles.heroBlobLarge, { backgroundColor: theme.accentSoft }]} />
-              <View style={[styles.heroBlobSmall, { backgroundColor: theme.accentSoft }]} />
+          <ScrollView
+            contentContainerStyle={styles.scroll}
+            keyboardShouldPersistTaps="handled"
+          >
+            <ImageBackground
+              source={require("../../../assets/images/onboarding/login-hero.jpg")}
+              style={styles.hero}
+              resizeMode="cover"
+            >
+              <View style={styles.heroScrim} />
 
-              <View style={styles.logoMark}>
-                <Feather name="repeat" size={34} color={theme.accent} />
-              </View>
-              <Text style={[styles.heroTitle, { fontFamily: Fonts.heading }]}>Tranzfr</Text>
+              <GlassView
+                style={[styles.logoPill, !isIOS && styles.glassFallback]}
+                glassEffectStyle="regular"
+                tintColor="rgba(0,0,0,0.25)"
+              >
+                <Feather name="repeat" size={28} color="#FFFFFF" />
+              </GlassView>
+              <Text style={[styles.heroTitle, { fontFamily: Fonts.heading }]}>
+                Tranzfr
+              </Text>
               <Text style={styles.heroTagline}>Comparte gastos sin líos</Text>
-            </View>
+            </ImageBackground>
 
             <View style={[styles.card, { backgroundColor: theme.card }]}>
-              <Text style={[styles.cardTitle, { color: theme.text, fontFamily: Fonts.heading }]}>
+              <Text
+                style={[
+                  styles.cardTitle,
+                  { color: theme.text, fontFamily: Fonts.heading },
+                ]}
+              >
                 Inicia sesión
               </Text>
 
-              {error && <Text style={[styles.error, { color: theme.debt }]}>{error}</Text>}
+              {error && (
+                <Text style={[styles.error, { color: theme.debt }]}>
+                  {error}
+                </Text>
+              )}
 
-              <Text style={[styles.label, { color: theme.textSecondary }]}>Email</Text>
-              <View style={[styles.inputWrapper, { borderColor: theme.border }]}>
+              <Text style={[styles.label, { color: theme.textSecondary }]}>
+                Email
+              </Text>
+              <View
+                style={[styles.inputWrapper, { borderColor: theme.border }]}
+              >
                 <Feather name="mail" size={18} color={theme.textSecondary} />
                 <TextInput
                   value={email}
                   onChangeText={setEmail}
-                  placeholder="tucorreo@ejemplo.com"
+                  placeholder="Tu email"
                   placeholderTextColor={theme.textSecondary}
                   autoCapitalize="none"
                   keyboardType="email-address"
@@ -83,10 +112,17 @@ export default function LoginScreen() {
                 />
               </View>
 
-              <Text style={[styles.label, { color: theme.textSecondary, marginTop: 16 }]}>
+              <Text
+                style={[
+                  styles.label,
+                  { color: theme.textSecondary, marginTop: 16 },
+                ]}
+              >
                 Contraseña
               </Text>
-              <View style={[styles.inputWrapper, { borderColor: theme.border }]}>
+              <View
+                style={[styles.inputWrapper, { borderColor: theme.border }]}
+              >
                 <Feather name="lock" size={18} color={theme.textSecondary} />
                 <TextInput
                   value={password}
@@ -102,7 +138,7 @@ export default function LoginScreen() {
                   style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
                 >
                   <Feather
-                    name={showPassword ? 'eye' : 'eye-off'}
+                    name={showPassword ? "eye" : "eye-off"}
                     size={18}
                     color={theme.textSecondary}
                   />
@@ -120,16 +156,26 @@ export default function LoginScreen() {
                   },
                 ]}
               >
-                <Text style={styles.buttonText}>{loading ? 'Entrando…' : 'Iniciar sesión'}</Text>
+                <Text style={styles.buttonText}>
+                  {loading ? "Entrando…" : "Iniciar sesión"}
+                </Text>
               </Pressable>
 
-              <Link href="/forgot-password" style={[styles.link, { color: theme.accent }]}>
+              <Link
+                href="/forgot-password"
+                style={[styles.link, { color: theme.accent }]}
+              >
                 ¿Olvidaste tu contraseña?
               </Link>
 
               <View style={styles.footer}>
-                <Text style={{ color: theme.textSecondary }}>¿No tienes cuenta? </Text>
-                <Link href="/signup" style={[styles.link, { color: theme.accent }]}>
+                <Text style={{ color: theme.textSecondary }}>
+                  ¿No tienes cuenta?{" "}
+                </Text>
+                <Link
+                  href="/signup"
+                  style={[styles.link, { color: theme.accent }]}
+                >
                   Crear cuenta
                 </Link>
               </View>
@@ -144,6 +190,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: "#000000",
   },
   flex: {
     flex: 1,
@@ -154,44 +201,36 @@ const styles = StyleSheet.create({
   hero: {
     paddingTop: 36,
     paddingBottom: 48,
-    alignItems: 'center',
-    overflow: 'hidden',
+    alignItems: "center",
+    overflow: "hidden",
   },
-  heroBlobLarge: {
-    position: 'absolute',
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    top: -90,
-    right: -60,
-    opacity: 0.25,
+  heroScrim: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.35)",
   },
-  heroBlobSmall: {
-    position: 'absolute',
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    bottom: -50,
-    left: -40,
-    opacity: 0.2,
-  },
-  logoMark: {
-    width: 84,
-    height: 84,
-    borderRadius: 24,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoPill: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 16,
-    boxShadow: '0px 8px 20px rgba(0,0,0,0.18)',
+    overflow: "hidden",
+  },
+  glassFallback: {
+    backgroundColor: "rgba(20,20,28,0.55)",
   },
   heroTitle: {
     fontSize: 28,
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
   heroTagline: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.85)',
+    color: "rgba(255,255,255,0.85)",
     marginTop: 4,
   },
   card: {
@@ -208,12 +247,12 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
   },
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
     borderWidth: 1,
     borderRadius: 14,
@@ -227,28 +266,28 @@ const styles = StyleSheet.create({
   error: {
     fontSize: 13,
     marginBottom: 12,
-    textAlign: 'center',
+    textAlign: "center",
   },
   button: {
     borderRadius: 16,
     paddingVertical: 16,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 28,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   link: {
     fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
     marginTop: 18,
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: 22,
   },
 });

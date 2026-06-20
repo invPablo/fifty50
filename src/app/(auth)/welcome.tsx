@@ -1,11 +1,15 @@
 import { Feather } from '@expo/vector-icons';
+import { GlassView } from 'expo-glass-effect';
 import { Link, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
+  ImageBackground,
+  ImageSourcePropType,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,27 +19,33 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Fonts } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-type IconName = keyof typeof Feather.glyphMap;
-
 interface Slide {
-  icon: IconName;
+  image: ImageSourcePropType;
   title: string;
 }
 
 const SLIDES: Slide[] = [
-  { icon: 'users', title: 'Divide gastos con amigos al instante' },
-  { icon: 'map', title: 'Organiza cualquier viaje o piso compartido' },
-  { icon: 'check-circle', title: 'Saldad cuentas sin líos ni números' },
+  {
+    image: require('../../../assets/images/onboarding/friends.jpg'),
+    title: 'Divide gastos con amigos al instante',
+  },
+  {
+    image: require('../../../assets/images/onboarding/trip.jpg'),
+    title: 'Organiza cualquier viaje o piso compartido',
+  },
+  {
+    image: require('../../../assets/images/onboarding/settled.jpg'),
+    title: 'Saldad cuentas sin líos ni números',
+  },
 ];
 
 const AUTO_ADVANCE_MS = 2000;
+const isIOS = Platform.OS === 'ios';
 
 export default function WelcomeScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
   const [index, setIndex] = useState(0);
@@ -66,154 +76,195 @@ export default function WelcomeScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
-      <Animated.View
-        style={[
-          styles.logoRow,
-          {
-            opacity: logoAnim,
-            transform: [
-              {
-                scale: logoAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }),
-              },
-            ],
-          },
-        ]}
-      >
-        <View style={[styles.logoMark, { backgroundColor: theme.accent }]}>
-          <Feather name="repeat" size={22} color="#FFFFFF" />
-        </View>
-        <Text style={[styles.logoText, { color: theme.text, fontFamily: Fonts.heading }]}>
-          Tranzfr
-        </Text>
-      </Animated.View>
-
+    <View style={styles.root}>
       <ScrollView
         ref={scrollRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={handleScrollEnd}
-        style={styles.carousel}
+        style={StyleSheet.absoluteFill}
       >
         {SLIDES.map((slide, i) => (
-          <View key={i} style={[styles.slide, { width: SCREEN_WIDTH }]}>
-            <View style={[styles.illustrationBlob, { backgroundColor: theme.accentSoft }]}>
-              <Feather name={slide.icon} size={72} color={theme.accent} />
-            </View>
-            <Text style={[styles.slideTitle, { color: theme.text, fontFamily: Fonts.heading }]}>
-              {slide.title}
-            </Text>
-          </View>
+          <ImageBackground key={i} source={slide.image} style={styles.slide} resizeMode="cover">
+            <View style={styles.scrim} />
+            <View style={styles.scrimBottom} />
+          </ImageBackground>
         ))}
       </ScrollView>
 
-      <View style={styles.dots}>
-        {SLIDES.map((_, i) => (
-          <View
-            key={i}
-            style={[
-              styles.dot,
-              {
-                backgroundColor: i === index ? theme.accent : theme.border,
-                width: i === index ? 22 : 8,
-              },
-            ]}
-          />
-        ))}
-      </View>
-
-      <View style={styles.footer}>
-        <Pressable
-          onPress={() => router.push('/signup')}
-          style={({ pressed }) => [
-            styles.button,
-            { backgroundColor: theme.accent, opacity: pressed ? 0.85 : 1 },
+      <SafeAreaView style={styles.overlay} edges={['top', 'bottom']} pointerEvents="box-none">
+        <Animated.View
+          style={[
+            styles.logoRow,
+            {
+              opacity: logoAnim,
+              transform: [
+                {
+                  scale: logoAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }),
+                },
+              ],
+            },
           ]}
         >
-          <Text style={styles.buttonText}>Empezar viaje</Text>
-        </Pressable>
+          <GlassView
+            style={[styles.logoPill, !isIOS && styles.glassFallback]}
+            glassEffectStyle="regular"
+            tintColor="rgba(0,0,0,0.25)"
+          >
+            <View style={styles.logoMark}>
+              <Feather name="repeat" size={18} color="#FFFFFF" />
+            </View>
+            <Text style={[styles.logoText, { fontFamily: Fonts.heading }]}>Tranzfr</Text>
+          </GlassView>
+        </Animated.View>
 
-        <Link href="/login" style={[styles.loginLink, { color: theme.textSecondary }]}>
-          ¿Ya tienes cuenta? <Text style={{ color: theme.accent, fontWeight: '700' }}>Iniciar sesión</Text>
-        </Link>
-      </View>
-    </SafeAreaView>
+        <View style={styles.spacer} />
+
+        <GlassView
+          style={[styles.bottomPanel, !isIOS && styles.glassFallback]}
+          glassEffectStyle="regular"
+          tintColor="rgba(0,0,0,0.3)"
+        >
+          <Text style={[styles.slideTitle, { fontFamily: Fonts.heading }]}>
+            {SLIDES[index].title}
+          </Text>
+
+          <View style={styles.dots}>
+            {SLIDES.map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.dot,
+                  {
+                    backgroundColor: i === index ? '#FFFFFF' : 'rgba(255,255,255,0.4)',
+                    width: i === index ? 22 : 8,
+                  },
+                ]}
+              />
+            ))}
+          </View>
+
+          <Pressable
+            onPress={() => router.push('/signup')}
+            style={({ pressed }) => [styles.button, { opacity: pressed ? 0.85 : 1 }]}
+          >
+            <Text style={styles.buttonText}>Empezar viaje</Text>
+          </Pressable>
+
+          <Link href="/login" style={styles.loginLink}>
+            ¿Ya tienes cuenta? <Text style={styles.loginLinkStrong}>Iniciar sesión</Text>
+          </Link>
+        </GlassView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
+  root: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  slide: {
+    width: SCREEN_WIDTH,
+    height: '100%',
+  },
+  scrim: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '45%',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  scrimBottom: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '55%',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  overlay: {
     flex: 1,
   },
+  glassFallback: {
+    backgroundColor: 'rgba(20,20,28,0.55)',
+  },
   logoRow: {
+    alignItems: 'center',
+    paddingTop: 12,
+  },
+  logoPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingTop: 24,
-    paddingBottom: 8,
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   logoMark: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoText: {
-    fontSize: 20,
+    fontSize: 16,
+    color: '#FFFFFF',
   },
-  carousel: {
-    flexGrow: 0,
+  spacer: {
+    flex: 1,
   },
-  slide: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 40,
-    paddingVertical: 20,
-  },
-  illustrationBlob: {
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 32,
+  bottomPanel: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 28,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 20,
+    overflow: 'hidden',
   },
   slideTitle: {
-    fontSize: 20,
+    fontSize: 21,
     textAlign: 'center',
     lineHeight: 28,
+    color: '#FFFFFF',
   },
   dots: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 6,
-    marginTop: 8,
+    marginTop: 16,
   },
   dot: {
     height: 8,
     borderRadius: 4,
   },
-  footer: {
-    paddingHorizontal: 28,
-    paddingTop: 28,
-    paddingBottom: 12,
-  },
   button: {
     borderRadius: 16,
     paddingVertical: 16,
     alignItems: 'center',
+    marginTop: 22,
+    backgroundColor: '#FFFFFF',
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: '#16161D',
     fontSize: 15,
     fontWeight: '700',
   },
   loginLink: {
     textAlign: 'center',
     fontSize: 13,
-    marginTop: 18,
+    marginTop: 16,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  loginLinkStrong: {
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
 });

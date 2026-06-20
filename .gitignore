@@ -6,6 +6,10 @@ node_modules/
 # local dev tooling (e.g. downloaded adb)
 .tools/
 
+# raw/unprocessed onboarding photos (only the picked, optimized ones are tracked)
+assets/images/onboarding/[0-9]*.jpg
+assets/images/onboarding/optimized/
+
 # Expo
 .expo/
 dist/

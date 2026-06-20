@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
-import { PaywallSheet } from '@/components/paywall-sheet';
 import { Currencies } from '@/constants/currencies';
 import { useTheme } from '@/hooks/use-theme';
 import { useGroupsStore } from '@/store/use-groups-store';
@@ -13,6 +12,7 @@ import type { CurrencyCode, GroupType } from '@/types/models';
 interface CreateGroupSheetProps {
   visible: boolean;
   onClose: () => void;
+  onPremiumRequired: () => void;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,7 +22,7 @@ const GROUP_TYPES: { id: GroupType; label: string }[] = [
   { id: 'roommates', label: '🏠 Piso compartido' },
 ];
 
-export function CreateGroupSheet({ visible, onClose }: CreateGroupSheetProps) {
+export function CreateGroupSheet({ visible, onClose, onPremiumRequired }: CreateGroupSheetProps) {
   const theme = useTheme();
   const router = useRouter();
   const addGroup = useGroupsStore((s) => s.addGroup);
@@ -36,7 +36,6 @@ export function CreateGroupSheet({ visible, onClose }: CreateGroupSheetProps) {
   const [groupType, setGroupType] = useState<GroupType>('trip');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [showPaywall, setShowPaywall] = useState(false);
 
   function reset() {
     setName('');
@@ -73,7 +72,12 @@ export function CreateGroupSheet({ visible, onClose }: CreateGroupSheetProps) {
       router.push({ pathname: '/group/[id]', params: { id: groupId } });
     } catch (e: any) {
       if (e.message?.includes('premium_required')) {
-        setShowPaywall(true);
+        // Closing this sheet first avoids two react-native Modals being
+        // visible at once, which is unstable on Android (the OS dialog
+        // manager gets confused between the two and flickers/loops).
+        reset();
+        onClose();
+        setTimeout(onPremiumRequired, 300);
       } else {
         setError(e.message ?? 'No se pudo crear el grupo.');
       }
@@ -85,8 +89,7 @@ export function CreateGroupSheet({ visible, onClose }: CreateGroupSheetProps) {
   const canCreate = name.trim().length > 0 && yourDisplayName.trim().length > 0 && !submitting;
 
   return (
-    <>
-      <BottomSheet visible={visible} title="Nuevo grupo" onClose={onClose}>
+    <BottomSheet visible={visible} title="Nuevo grupo" onClose={onClose}>
       <ScrollView keyboardShouldPersistTaps="handled">
         {error && <Text style={[styles.error, { color: theme.debt }]}>{error}</Text>}
 
@@ -201,9 +204,7 @@ export function CreateGroupSheet({ visible, onClose }: CreateGroupSheetProps) {
           <Text style={styles.createButtonText}>{submitting ? 'Creando…' : 'Crear grupo'}</Text>
         </Pressable>
       </ScrollView>
-      </BottomSheet>
-      <PaywallSheet visible={showPaywall} onClose={() => setShowPaywall(false)} />
-    </>
+    </BottomSheet>
   );
 }
 

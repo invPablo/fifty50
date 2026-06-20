@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CreateGroupSheet } from '@/components/create-group-sheet';
 import { GroupCard } from '@/components/group-card';
+import { PaywallSheet } from '@/components/paywall-sheet';
 import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getDaysUntilExpiry } from '@/lib/email-verification';
@@ -20,6 +21,7 @@ export default function GroupsListScreen() {
   const groups = useGroupsStore((s) => s.groups);
   const fetchGroups = useGroupsStore((s) => s.fetchGroups);
   const [sheetVisible, setSheetVisible] = useState(false);
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
   const emailVerificationDays = session?.user?.created_at
     ? getDaysUntilExpiry(session.user.created_at)
@@ -111,7 +113,12 @@ export default function GroupsListScreen() {
         />
       )}
 
-      <CreateGroupSheet visible={sheetVisible} onClose={() => setSheetVisible(false)} />
+      <CreateGroupSheet
+        visible={sheetVisible}
+        onClose={() => setSheetVisible(false)}
+        onPremiumRequired={() => setPaywallVisible(true)}
+      />
+      <PaywallSheet visible={paywallVisible} onClose={() => setPaywallVisible(false)} />
     </SafeAreaView>
   );
 }

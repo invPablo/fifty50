@@ -14,6 +14,8 @@ interface RecordPaymentSheetProps {
   members: GroupMember[];
   currency: CurrencyCode;
   defaultFromId: string;
+  defaultToId?: string;
+  defaultAmount?: number;
 }
 
 export function RecordPaymentSheet({
@@ -23,31 +25,37 @@ export function RecordPaymentSheet({
   members,
   currency,
   defaultFromId,
+  defaultToId,
+  defaultAmount,
 }: RecordPaymentSheetProps) {
   const theme = useTheme();
   const addSettlement = useGroupsStore((s) => s.addSettlement);
 
   const [from, setFrom] = useState(defaultFromId || members[0]?.id || '');
-  const [to, setTo] = useState(members.find((m) => m.id !== defaultFromId)?.id ?? '');
-
-  // defaultFromId can resolve after this sheet first mounts (it depends on
-  // session, which loads async) — recompute the defaults each time it opens
-  // rather than only once at mount.
-  useEffect(() => {
-    if (!visible) return;
-    const initialFrom = defaultFromId || members[0]?.id || '';
-    setFrom(initialFrom);
-    setTo(members.find((m) => m.id !== initialFrom)?.id ?? '');
-  }, [visible, defaultFromId, members]);
-  const [amount, setAmount] = useState('');
+  const [to, setTo] = useState(
+    defaultToId ?? members.find((m) => m.id !== defaultFromId)?.id ?? ''
+  );
+  const [amount, setAmount] = useState(defaultAmount ? defaultAmount.toFixed(2) : '');
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // defaultFromId/defaultToId/defaultAmount can resolve or change after this
+  // sheet first mounts (defaultFromId depends on session, which loads async;
+  // defaultToId/defaultAmount come from whichever "Liquidar" suggestion was
+  // tapped) — recompute every time it opens rather than only once at mount.
+  useEffect(() => {
+    if (!visible) return;
+    const initialFrom = defaultFromId || members[0]?.id || '';
+    setFrom(initialFrom);
+    setTo(defaultToId ?? members.find((m) => m.id !== initialFrom)?.id ?? '');
+    setAmount(defaultAmount ? defaultAmount.toFixed(2) : '');
+  }, [visible, defaultFromId, defaultToId, defaultAmount, members]);
+
   function reset() {
     setFrom(defaultFromId || members[0]?.id || '');
-    setTo(members.find((m) => m.id !== defaultFromId)?.id ?? '');
-    setAmount('');
+    setTo(defaultToId ?? members.find((m) => m.id !== defaultFromId)?.id ?? '');
+    setAmount(defaultAmount ? defaultAmount.toFixed(2) : '');
     setNote('');
     setError(null);
   }

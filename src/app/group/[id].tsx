@@ -51,7 +51,28 @@ export default function GroupDetailScreen() {
   const { balances, transactions } = calculateDebts(group);
   const symbol = currencySymbol(group.currency);
   const groupId = group.id;
-  const currentMemberId = group.members.find((m) => m.userId === session?.user.id)?.id ?? '';
+  const myMember = group.members.find((m) => m.userId === session?.user.id);
+  const currentMemberId = myMember?.id ?? '';
+  const myBalanceValue = myMember ? balances[myMember.id] ?? 0 : 0;
+  const otherMembers = group.members.filter((m) => m.id !== currentMemberId);
+  const myTransaction = transactions.find((t) => t.from === currentMemberId);
+
+  const isCredit = myBalanceValue > 0.01;
+  const isDebt = myBalanceValue < -0.01;
+  let summaryText = 'Estáis saldados';
+  if (myMember && (isCredit || isDebt)) {
+    if (otherMembers.length === 1) {
+      const other = otherMembers[0];
+      summaryText = isCredit
+        ? `${other.displayName} te debe ${symbol}${myBalanceValue.toFixed(2)}`
+        : `Le debes ${symbol}${Math.abs(myBalanceValue).toFixed(2)} a ${other.displayName}`;
+    } else {
+      summaryText = isCredit
+        ? `Te deben ${symbol}${myBalanceValue.toFixed(2)} en total`
+        : `Debes ${symbol}${Math.abs(myBalanceValue).toFixed(2)} en total`;
+    }
+  }
+  const summaryColor = isCredit ? theme.credit : isDebt ? theme.debt : theme.textSecondary;
 
   const historial = [
     ...group.expenses.map((expense) => ({ date: expense.date, kind: 'expense' as const, expense })),
@@ -61,6 +82,26 @@ export default function GroupDetailScreen() {
       settlement,
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const historialNodes: Array<
+    | { kind: 'month'; key: string; label: string }
+    | { kind: 'expense'; key: string; expense: (typeof group.expenses)[number] }
+    | { kind: 'settlement'; key: string; settlement: (typeof group.settlements)[number] }
+  > = [];
+  let lastMonthKey = '';
+  historial.forEach((item) => {
+    const monthKey = item.date.slice(0, 7);
+    if (monthKey !== lastMonthKey) {
+      lastMonthKey = monthKey;
+      const label = new Date(item.date).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+      historialNodes.push({ kind: 'month', key: `month-${monthKey}`, label: label.charAt(0).toUpperCase() + label.slice(1) });
+    }
+    historialNodes.push(
+      item.kind === 'expense'
+        ? { kind: 'expense', key: `expense-${item.expense.id}`, expense: item.expense }
+        : { kind: 'settlement', key: `settlement-${item.settlement.id}`, settlement: item.settlement }
+    );
+  });
 
   async function handleDelete() {
     try {
@@ -109,7 +150,21 @@ export default function GroupDetailScreen() {
       />
 
       <ScrollView contentContainerStyle={styles.content}>
+        <Text style={[styles.summary, { color: summaryColor, fontFamily: Fonts.bold }]}>
+          {summaryText}
+        </Text>
+
         <View style={styles.actionsRow}>
+          <Pressable
+            onPress={() => setPaymentSheetVisible(true)}
+            style={({ pressed }) => [
+              styles.settleCard,
+              { backgroundColor: theme.credit, opacity: pressed ? 0.85 : 1 },
+            ]}
+          >
+            <Feather name="send" size={18} color="#FFFFFF" />
+            <Text style={styles.settleText}>Liquidar</Text>
+          </Pressable>
           <Pressable
             onPress={handleShare}
             style={({ pressed }) => [
@@ -117,9 +172,9 @@ export default function GroupDetailScreen() {
               { backgroundColor: theme.accentSoft, opacity: pressed ? 0.7 : 1 },
             ]}
           >
-            <Feather name="share-2" size={20} color={theme.accent} />
+            <Feather name="share-2" size={18} color={theme.accent} />
             <Text style={[styles.shareText, { color: theme.accent }]}>
-              Compartir link
+              Compartir
             </Text>
           </Pressable>
           <Pressable
@@ -165,45 +220,50 @@ export default function GroupDetailScreen() {
 
         <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Historial</Text>
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          {historial.length === 0 ? (
+          {historialNodes.length === 0 ? (
             <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
               Todavía no hay movimientos en este grupo.
             </Text>
           ) : (
-            historial.map((item) =>
-              item.kind === 'expense' ? (
-                <ExpenseRow
-                  key={`expense-${item.expense.id}`}
-                  expense={item.expense}
-                  symbol={symbol}
-                  membersById={membersById}
-                />
-              ) : (
+            historialNodes.map((node) => {
+              if (node.kind === 'month') {
+                return (
+                  <Text key={node.key} style={[styles.monthLabel, { color: theme.textSecondary }]}>
+                    {node.label}
+                  </Text>
+                );
+              }
+              if (node.kind === 'expense') {
+                return (
+                  <ExpenseRow
+                    key={node.key}
+                    expense={node.expense}
+                    symbol={symbol}
+                    membersById={membersById}
+                    currentMemberId={currentMemberId}
+                  />
+                );
+              }
+              return (
                 <SettlementRow
-                  key={`settlement-${item.settlement.id}`}
-                  transaction={item.settlement}
+                  key={node.key}
+                  transaction={node.settlement}
                   symbol={symbol}
                   membersById={membersById}
                   variant="recorded"
                 />
-              )
-            )
+              );
+            })
           )}
         </View>
       </ScrollView>
 
       <Pressable
-        onPress={() => setPaymentSheetVisible(true)}
-        style={({ pressed }) => [styles.fab, styles.fabPayment, { backgroundColor: theme.credit, opacity: pressed ? 0.85 : 1 }]}
-      >
-        <Feather name="send" size={22} color="#FFFFFF" />
-      </Pressable>
-
-      <Pressable
         onPress={() => setSheetVisible(true)}
-        style={({ pressed }) => [styles.fab, { backgroundColor: theme.accent, opacity: pressed ? 0.85 : 1 }]}
+        style={({ pressed }) => [styles.addFab, { backgroundColor: theme.accent, opacity: pressed ? 0.85 : 1 }]}
       >
-        <Feather name="plus" size={24} color="#FFFFFF" />
+        <Feather name="plus" size={20} color="#FFFFFF" />
+        <Text style={styles.addFabText}>Añadir gasto</Text>
       </Pressable>
 
       <AddExpenseSheet
@@ -221,6 +281,8 @@ export default function GroupDetailScreen() {
         members={group.members}
         currency={group.currency}
         defaultFromId={currentMemberId}
+        defaultToId={myTransaction?.to}
+        defaultAmount={myTransaction?.amount}
       />
     </SafeAreaView>
   );
@@ -234,20 +296,37 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 100,
   },
+  summary: {
+    fontSize: 20,
+    marginBottom: 16,
+  },
   actionsRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
     marginBottom: 20,
+  },
+  settleCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 14,
+    paddingVertical: 12,
+  },
+  settleText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
   },
   shareCard: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: 8,
     borderRadius: 14,
     paddingVertical: 12,
-    paddingHorizontal: 16,
   },
   shareText: {
     fontSize: 15,
@@ -287,21 +366,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: 8,
   },
-  fab: {
+  monthLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  addFab: {
     position: 'absolute',
     bottom: 28,
     right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 28,
     boxShadow: '0px 4px 8px rgba(0,0,0,0.2)',
   },
-  fabPayment: {
-    right: 92,
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+  addFabText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });

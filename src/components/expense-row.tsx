@@ -9,13 +9,29 @@ interface ExpenseRowProps {
   expense: Expense;
   symbol: string;
   membersById: Record<string, GroupMember>;
+  currentMemberId?: string;
 }
 
-export function ExpenseRow({ expense, symbol, membersById }: ExpenseRowProps) {
+export function ExpenseRow({ expense, symbol, membersById, currentMemberId }: ExpenseRowProps) {
   const theme = useTheme();
   const category = Categories.find((c) => c.id === expense.category);
-  const payerName = membersById[expense.paidBy]?.displayName ?? '?';
+  const payer = membersById[expense.paidBy];
+  const payerName = payer?.displayName ?? '?';
   const categoryColor = category?.color ?? theme.accent;
+
+  const isPayer = !!currentMemberId && currentMemberId === expense.paidBy;
+  const mySplit = currentMemberId
+    ? expense.splits.find((s) => s.groupMemberId === currentMemberId)
+    : undefined;
+  const involved = isPayer || !!mySplit;
+  // What this expense did to *your* balance: what you fronted minus your own
+  // share. Positive = you lent the rest of the group money; negative = you
+  // owe your share to whoever paid.
+  const net = (isPayer ? expense.amount : 0) - (mySplit?.shareAmount ?? 0);
+
+  const meta = isPayer
+    ? `Tú pagaste ${symbol}${expense.amount.toFixed(2)}`
+    : `${payerName} pagó ${symbol}${expense.amount.toFixed(2)}`;
 
   return (
     <View style={styles.row}>
@@ -24,14 +40,30 @@ export function ExpenseRow({ expense, symbol, membersById }: ExpenseRowProps) {
       </View>
       <View style={styles.info}>
         <Text style={[styles.description, { color: theme.text }]}>{expense.description}</Text>
-        <Text style={[styles.meta, { color: theme.textSecondary }]}>
-          Pagado por {payerName} · entre {expense.splits.length}
-        </Text>
+        <Text style={[styles.meta, { color: theme.textSecondary }]}>{meta}</Text>
       </View>
-      <Text style={[styles.amount, { color: theme.text }]}>
-        {symbol}
-        {expense.amount.toFixed(2)}
-      </Text>
+      {involved && net > 0.01 ? (
+        <View style={styles.amountStack}>
+          <Text style={[styles.amountLabel, { color: theme.credit }]}>Prestaste</Text>
+          <Text style={[styles.amount, { color: theme.credit }]}>
+            {symbol}
+            {net.toFixed(2)}
+          </Text>
+        </View>
+      ) : involved && net < -0.01 ? (
+        <View style={styles.amountStack}>
+          <Text style={[styles.amountLabel, { color: theme.debt }]}>Debes</Text>
+          <Text style={[styles.amount, { color: theme.debt }]}>
+            {symbol}
+            {Math.abs(net).toFixed(2)}
+          </Text>
+        </View>
+      ) : (
+        <Text style={[styles.amount, { color: theme.text }]}>
+          {symbol}
+          {expense.amount.toFixed(2)}
+        </Text>
+      )}
     </View>
   );
 }
@@ -64,5 +96,15 @@ const styles = StyleSheet.create({
   amount: {
     fontSize: 15,
     fontWeight: '700',
+  },
+  amountStack: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  amountLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
 });

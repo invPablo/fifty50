@@ -3,6 +3,9 @@
 # dependencies
 node_modules/
 
+# local dev tooling (e.g. downloaded adb)
+.tools/
+
 # Expo
 .expo/
 dist/

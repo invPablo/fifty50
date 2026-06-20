@@ -3,7 +3,6 @@ import { GlassView } from "expo-glass-effect";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Image,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
@@ -21,7 +20,6 @@ import { supabase } from "@/lib/supabase";
 
 const isIOS = Platform.OS === "ios";
 const ACCENT = "#7F77DD";
-const SCRIM_GRADIENT = require("../../../assets/images/onboarding/scrim-gradient.png");
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -54,9 +52,7 @@ export default function LoginScreen() {
         source={require("../../../assets/images/onboarding/login-hero.jpg")}
         style={StyleSheet.absoluteFill}
         resizeMode="cover"
-      >
-        <Image source={SCRIM_GRADIENT} style={StyleSheet.absoluteFill} resizeMode="stretch" />
-      </ImageBackground>
+      />
 
       <SafeAreaView style={styles.flex} edges={["top", "bottom"]}>
         <View style={styles.logoRow}>
@@ -158,7 +154,7 @@ export default function LoginScreen() {
 
               <View style={styles.footer}>
                 <Text style={styles.footerText}>¿No tienes cuenta? </Text>
-                <Link href="/signup" style={styles.link}>
+                <Link href="/signup" style={styles.footerLink}>
                   Crear cuenta
                 </Link>
               </View>
@@ -270,9 +266,16 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: "row",
     justifyContent: "center",
+    alignItems: "center",
     marginTop: 22,
   },
   footerText: {
     color: "rgba(255,255,255,0.75)",
+    fontSize: 13,
+  },
+  footerLink: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: ACCENT,
   },
 });

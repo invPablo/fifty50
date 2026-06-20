@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
+  Image,
   ImageBackground,
   ImageSourcePropType,
   NativeScrollEvent,
@@ -56,32 +57,7 @@ const SLIDES: Slide[] = [
 
 const AUTO_ADVANCE_MS = 2000;
 const isIOS = Platform.OS === 'ios';
-const GRADIENT_STEPS = 10;
-
-function ScrimGradient() {
-  return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {Array.from({ length: GRADIENT_STEPS }).map((_, i) => {
-        const t = i / (GRADIENT_STEPS - 1);
-        const opacity = 0.05 + 0.55 * Math.pow(t, 1.4);
-        return (
-          <View
-            key={i}
-            style={{
-              position: 'absolute',
-              top: `${(i / GRADIENT_STEPS) * 100}%`,
-              left: 0,
-              right: 0,
-              height: `${100 / GRADIENT_STEPS}%`,
-              backgroundColor: '#000',
-              opacity,
-            }}
-          />
-        );
-      })}
-    </View>
-  );
-}
+const SCRIM_GRADIENT = require('../../../assets/images/onboarding/scrim-gradient.png');
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -125,7 +101,7 @@ export default function WelcomeScreen() {
       >
         {SLIDES.map((slide, i) => (
           <ImageBackground key={i} source={slide.image} style={styles.slide} resizeMode="cover">
-            <ScrimGradient />
+            <Image source={SCRIM_GRADIENT} style={StyleSheet.absoluteFill} resizeMode="stretch" />
           </ImageBackground>
         ))}
       </ScrollView>

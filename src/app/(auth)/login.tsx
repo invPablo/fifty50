@@ -3,6 +3,7 @@ import { GlassView } from "expo-glass-effect";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Image,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
@@ -20,32 +21,7 @@ import { supabase } from "@/lib/supabase";
 
 const isIOS = Platform.OS === "ios";
 const ACCENT = "#7F77DD";
-const GRADIENT_STEPS = 10;
-
-function ScrimGradient() {
-  return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {Array.from({ length: GRADIENT_STEPS }).map((_, i) => {
-        const t = i / (GRADIENT_STEPS - 1);
-        const opacity = 0.1 + 0.5 * Math.pow(t, 1.4);
-        return (
-          <View
-            key={i}
-            style={{
-              position: "absolute",
-              top: `${(i / GRADIENT_STEPS) * 100}%`,
-              left: 0,
-              right: 0,
-              height: `${100 / GRADIENT_STEPS}%`,
-              backgroundColor: "#000",
-              opacity,
-            }}
-          />
-        );
-      })}
-    </View>
-  );
-}
+const SCRIM_GRADIENT = require("../../../assets/images/onboarding/scrim-gradient.png");
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -79,7 +55,7 @@ export default function LoginScreen() {
         style={StyleSheet.absoluteFill}
         resizeMode="cover"
       >
-        <ScrimGradient />
+        <Image source={SCRIM_GRADIENT} style={StyleSheet.absoluteFill} resizeMode="stretch" />
       </ImageBackground>
 
       <SafeAreaView style={styles.flex} edges={["top", "bottom"]}>

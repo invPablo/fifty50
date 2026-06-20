@@ -1,10 +1,10 @@
-import { Feather } from '@expo/vector-icons';
 import { GlassView } from 'expo-glass-effect';
 import { Link, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
+  Image,
   ImageBackground,
   ImageSourcePropType,
   NativeScrollEvent,
@@ -19,6 +19,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Fonts } from '@/constants/theme';
+
+const LOGO_WORDMARK = require('../../../assets/images/logo-wordmark.png');
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -121,10 +123,7 @@ export default function WelcomeScreen() {
             glassEffectStyle="regular"
             tintColor="rgba(0,0,0,0.25)"
           >
-            <View style={styles.logoMark}>
-              <Feather name="repeat" size={18} color="#FFFFFF" />
-            </View>
-            <Text style={[styles.logoText, { fontFamily: Fonts.heading }]}>Tranzfr</Text>
+            <Image source={LOGO_WORDMARK} style={styles.logoWordmark} resizeMode="contain" />
           </GlassView>
         </Animated.View>
 
@@ -192,23 +191,14 @@ const styles = StyleSheet.create({
   logoPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
     borderRadius: 20,
     overflow: 'hidden',
   },
-  logoMark: {
-    width: 24,
-    height: 24,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoText: {
-    fontSize: 16,
-    color: '#FFFFFF',
+  logoWordmark: {
+    width: 75,
+    height: 22,
   },
   spacer: {
     flex: 1,

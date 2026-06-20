@@ -3,6 +3,7 @@ import { GlassView } from "expo-glass-effect";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Image,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
@@ -20,6 +21,7 @@ import { supabase } from "@/lib/supabase";
 
 const isIOS = Platform.OS === "ios";
 const ACCENT = "#7F77DD";
+const LOGO_WORDMARK = require("../../../assets/images/logo-wordmark.png");
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -61,12 +63,7 @@ export default function LoginScreen() {
             glassEffectStyle="regular"
             tintColor="rgba(0,0,0,0.25)"
           >
-            <View style={styles.logoMark}>
-              <Feather name="repeat" size={16} color="#FFFFFF" />
-            </View>
-            <Text style={[styles.logoText, { fontFamily: Fonts.heading }]}>
-              Tranzfr
-            </Text>
+            <Image source={LOGO_WORDMARK} style={styles.logoWordmark} resizeMode="contain" />
           </GlassView>
         </View>
 
@@ -186,23 +183,14 @@ const styles = StyleSheet.create({
   logoPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
     borderRadius: 20,
     overflow: "hidden",
   },
-  logoMark: {
-    width: 24,
-    height: 24,
-    borderRadius: 8,
-    backgroundColor: "rgba(255,255,255,0.25)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoText: {
-    fontSize: 16,
-    color: "#FFFFFF",
+  logoWordmark: {
+    width: 75,
+    height: 22,
   },
   glassFallback: {
     backgroundColor: "rgba(20,20,28,0.55)",

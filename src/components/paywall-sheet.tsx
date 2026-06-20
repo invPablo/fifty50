@@ -28,6 +28,16 @@ export function PaywallSheet({ visible, onClose }: PaywallSheetProps) {
           <Text style={[styles.priceHint, { color: theme.accent }]}>pago único</Text>
         </View>
 
+        <View style={[styles.featureRow, { borderColor: theme.border }]}>
+          <Feather name="home" size={16} color={theme.textSecondary} />
+          <Text style={[styles.featureText, { color: theme.textSecondary }]}>
+            Grupos de piso compartido
+          </Text>
+          <View style={[styles.soonPill, { backgroundColor: theme.accentSoft }]}>
+            <Text style={[styles.soonPillText, { color: theme.accent }]}>Próximamente</Text>
+          </View>
+        </View>
+
         <Text style={[styles.comingSoon, { color: theme.textSecondary }]}>
           Los pagos llegarán antes de publicar la app en las tiendas. De momento esta pantalla es
           solo para probar el flujo.
@@ -75,5 +85,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     lineHeight: 17,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 16,
+    width: '100%',
+  },
+  featureText: {
+    fontSize: 13,
+    flex: 1,
+  },
+  soonPill: {
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  soonPillText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
 });

@@ -44,6 +44,7 @@ export interface Group {
   id: string;
   name: string;
   type: GroupType;
+  imageUrl: string | null;
   members: GroupMember[];
   currency: CurrencyCode;
   expenses: Expense[];

@@ -20,7 +20,7 @@ import { Fonts } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
 
 const isIOS = Platform.OS === "ios";
-const ACCENT = "#7F77DD";
+const ACCENT = "#4DA8F5";
 const LOGO_WORDMARK = require("../../../assets/images/logo-wordmark.png");
 
 export default function SignupScreen() {

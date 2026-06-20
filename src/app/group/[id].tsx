@@ -1,9 +1,11 @@
 import { Feather } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
+import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'expo-image';
 
 import { AddExpenseSheet } from '@/components/add-expense-sheet';
 import { BalanceRow } from '@/components/balance-row';
@@ -14,20 +16,24 @@ import { currencySymbol } from '@/constants/currencies';
 import { Fonts } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
+import { getAvatarColor } from '@/lib/avatar';
 import { useGroupsStore } from '@/store/use-groups-store';
 
 export default function GroupDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { session } = useSession();
   const group = useGroupsStore((s) => s.getGroup(id));
   const fetchGroupDetail = useGroupsStore((s) => s.fetchGroupDetail);
   const calculateDebts = useGroupsStore((s) => s.calculateDebts);
   const deleteGroup = useGroupsStore((s) => s.deleteGroup);
+  const updateGroupImage = useGroupsStore((s) => s.updateGroupImage);
   const [sheetVisible, setSheetVisible] = useState(false);
   const [paymentSheetVisible, setPaymentSheetVisible] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -51,6 +57,7 @@ export default function GroupDetailScreen() {
   const { balances, transactions } = calculateDebts(group);
   const symbol = currencySymbol(group.currency);
   const groupId = group.id;
+  const heroColor = getAvatarColor(group.id);
   const myMember = group.members.find((m) => m.userId === session?.user.id);
   const currentMemberId = myMember?.id ?? '';
   const myBalanceValue = myMember ? balances[myMember.id] ?? 0 : 0;
@@ -140,121 +147,169 @@ export default function GroupDetailScreen() {
     }
   }
 
+  async function handlePickImage() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets[0]) return;
+    setUploadingImage(true);
+    try {
+      await updateGroupImage(groupId, result.assets[0].uri);
+    } catch {
+      Alert.alert('Error', 'No se pudo subir la imagen.');
+    } finally {
+      setUploadingImage(false);
+    }
+  }
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
-      <Stack.Screen
-        options={{
-          title: group.name,
-          headerTitleStyle: { fontFamily: Fonts.heading, fontSize: 17 },
-        }}
-      />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['bottom']}>
+      <Stack.Screen options={{ headerShown: false }} />
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={[styles.summary, { color: summaryColor, fontFamily: Fonts.bold }]}>
-          {summaryText}
-        </Text>
-
-        <View style={styles.actionsRow}>
-          <Pressable
-            onPress={() => setPaymentSheetVisible(true)}
-            style={({ pressed }) => [
-              styles.settleCard,
-              { backgroundColor: theme.credit, opacity: pressed ? 0.85 : 1 },
-            ]}
-          >
-            <Feather name="send" size={18} color="#FFFFFF" />
-            <Text style={styles.settleText}>Liquidar</Text>
-          </Pressable>
-          <Pressable
-            onPress={handleShare}
-            style={({ pressed }) => [
-              styles.shareCard,
-              { backgroundColor: theme.accentSoft, opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <Feather name="share-2" size={18} color={theme.accent} />
-            <Text style={[styles.shareText, { color: theme.accent }]}>
-              Compartir
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={confirmDelete}
-            style={({ pressed }) => [
-              styles.deleteCard,
-              { backgroundColor: theme.debtSoft, opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <Feather name="trash-2" size={20} color={theme.debt} />
-          </Pressable>
-        </View>
-
-        <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Balances</Text>
-        <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          {group.members.map((member) => (
-            <BalanceRow
-              key={member.id}
-              member={member}
-              amount={balances[member.id] ?? 0}
-              symbol={symbol}
-            />
-          ))}
-        </View>
-
-        {transactions.length > 0 ? (
-          <>
-            <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-              Para saldar cuentas
-            </Text>
-            {transactions.map((t, i) => (
-              <SettlementRow key={i} transaction={t} symbol={symbol} membersById={membersById} />
-            ))}
-          </>
-        ) : group.expenses.length > 0 ? (
-          <View style={[styles.settledCard, { backgroundColor: theme.creditSoft }]}>
-            <Feather name="check-circle" size={20} color={theme.credit} />
-            <Text style={[styles.settledText, { color: theme.credit, fontFamily: Fonts.bold }]}>
-              Todo saldado
-            </Text>
-          </View>
-        ) : null}
-
-        <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Historial</Text>
-        <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          {historialNodes.length === 0 ? (
-            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-              Todavía no hay movimientos en este grupo.
-            </Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.hero}>
+          {group.imageUrl ? (
+            <Image source={{ uri: group.imageUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
           ) : (
-            historialNodes.map((node) => {
-              if (node.kind === 'month') {
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: heroColor }]} />
+          )}
+
+          <View style={[styles.heroTopRow, { paddingTop: insets.top + 8 }]}>
+            <Pressable
+              onPress={() => router.back()}
+              style={({ pressed }) => [styles.heroIconButton, { opacity: pressed ? 0.7 : 1 }]}
+            >
+              <Feather name="chevron-left" size={22} color="#FFFFFF" />
+            </Pressable>
+            <Pressable
+              onPress={handlePickImage}
+              disabled={uploadingImage}
+              style={({ pressed }) => [styles.heroIconButton, { opacity: pressed ? 0.7 : 1 }]}
+            >
+              {uploadingImage ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Feather name="camera" size={18} color="#FFFFFF" />
+              )}
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={[styles.headerCard, { backgroundColor: theme.card }]}>
+          <Text style={[styles.groupName, { color: theme.text, fontFamily: Fonts.heading }]}>
+            {group.name}
+          </Text>
+          <Text style={[styles.groupMeta, { color: theme.textSecondary }]}>
+            {group.members.length} miembros · {group.currency}
+          </Text>
+          <Text style={[styles.summary, { color: summaryColor, fontFamily: Fonts.bold }]}>
+            {summaryText}
+          </Text>
+
+          <View style={styles.actionsRow}>
+            <Pressable
+              onPress={() => setPaymentSheetVisible(true)}
+              style={({ pressed }) => [
+                styles.settleCard,
+                { backgroundColor: theme.text, opacity: pressed ? 0.85 : 1 },
+              ]}
+            >
+              <Feather name="send" size={18} color="#FFFFFF" />
+              <Text style={styles.settleText}>Liquidar</Text>
+            </Pressable>
+            <Pressable
+              onPress={handleShare}
+              style={({ pressed }) => [
+                styles.shareCard,
+                { backgroundColor: theme.accentSoft, opacity: pressed ? 0.7 : 1 },
+              ]}
+            >
+              <Feather name="share-2" size={18} color={theme.accent} />
+              <Text style={[styles.shareText, { color: theme.accent }]}>
+                Compartir
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={confirmDelete}
+              style={({ pressed }) => [styles.deleteCard, { backgroundColor: theme.debtSoft, opacity: pressed ? 0.7 : 1 }]}
+            >
+              <Feather name="trash-2" size={20} color={theme.debt} />
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={styles.content}>
+          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Balances</Text>
+          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            {group.members.map((member) => (
+              <BalanceRow
+                key={member.id}
+                member={member}
+                amount={balances[member.id] ?? 0}
+                symbol={symbol}
+              />
+            ))}
+          </View>
+
+          {transactions.length > 0 ? (
+            <>
+              <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
+                Para saldar cuentas
+              </Text>
+              {transactions.map((t, i) => (
+                <SettlementRow key={i} transaction={t} symbol={symbol} membersById={membersById} />
+              ))}
+            </>
+          ) : group.expenses.length > 0 ? (
+            <View style={[styles.settledCard, { backgroundColor: theme.creditSoft }]}>
+              <Feather name="check-circle" size={20} color={theme.credit} />
+              <Text style={[styles.settledText, { color: theme.credit, fontFamily: Fonts.bold }]}>
+                Todo saldado
+              </Text>
+            </View>
+          ) : null}
+
+          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Historial</Text>
+          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            {historialNodes.length === 0 ? (
+              <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+                Todavía no hay movimientos en este grupo.
+              </Text>
+            ) : (
+              historialNodes.map((node) => {
+                if (node.kind === 'month') {
+                  return (
+                    <Text key={node.key} style={[styles.monthLabel, { color: theme.textSecondary }]}>
+                      {node.label}
+                    </Text>
+                  );
+                }
+                if (node.kind === 'expense') {
+                  return (
+                    <ExpenseRow
+                      key={node.key}
+                      expense={node.expense}
+                      symbol={symbol}
+                      membersById={membersById}
+                      currentMemberId={currentMemberId}
+                    />
+                  );
+                }
                 return (
-                  <Text key={node.key} style={[styles.monthLabel, { color: theme.textSecondary }]}>
-                    {node.label}
-                  </Text>
-                );
-              }
-              if (node.kind === 'expense') {
-                return (
-                  <ExpenseRow
+                  <SettlementRow
                     key={node.key}
-                    expense={node.expense}
+                    transaction={node.settlement}
                     symbol={symbol}
                     membersById={membersById}
-                    currentMemberId={currentMemberId}
+                    variant="recorded"
                   />
                 );
-              }
-              return (
-                <SettlementRow
-                  key={node.key}
-                  transaction={node.settlement}
-                  symbol={symbol}
-                  membersById={membersById}
-                  variant="recorded"
-                />
-              );
-            })
-          )}
+              })
+            )}
+          </View>
         </View>
       </ScrollView>
 
@@ -292,18 +347,49 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
-    padding: 20,
+  scrollContent: {
     paddingBottom: 100,
   },
+  hero: {
+    height: 220,
+    overflow: 'hidden',
+  },
+  heroTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+  },
+  heroIconButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  headerCard: {
+    marginTop: -28,
+    marginHorizontal: 16,
+    borderRadius: 24,
+    padding: 20,
+    boxShadow: '0px 10px 24px rgba(0,0,0,0.12)',
+    elevation: 4,
+  },
+  groupName: {
+    fontSize: 22,
+  },
+  groupMeta: {
+    fontSize: 13,
+    marginTop: 4,
+  },
   summary: {
-    fontSize: 20,
-    marginBottom: 16,
+    fontSize: 16,
+    marginTop: 12,
   },
   actionsRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 20,
+    marginTop: 16,
   },
   settleCard: {
     flex: 1,
@@ -337,6 +423,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 14,
     width: 48,
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
   },
   sectionTitle: {
     fontSize: 13,

@@ -5,7 +5,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CreateGroupSheet } from '@/components/create-group-sheet';
-import { GroupCard } from '@/components/group-card';
+import { GROUP_CARD_WIDTH, GroupCard } from '@/components/group-card';
 import { PaywallSheet } from '@/components/paywall-sheet';
 import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -13,6 +13,8 @@ import { getDaysUntilExpiry } from '@/lib/email-verification';
 import { supabase } from '@/lib/supabase';
 import { useGroupsStore } from '@/store/use-groups-store';
 import { useSession } from '@/hooks/use-session';
+
+const CARD_GAP = 14;
 
 export default function GroupsListScreen() {
   const theme = useTheme();
@@ -24,7 +26,7 @@ export default function GroupsListScreen() {
   const [paywallVisible, setPaywallVisible] = useState(false);
 
   const userName =
-    session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || 'ahí';
+    session?.user?.user_metadata?.display_name || session?.user?.email?.split('@')[0] || 'ahí';
 
   const emailVerificationDays = session?.user?.created_at
     ? getDaysUntilExpiry(session.user.created_at)
@@ -106,9 +108,12 @@ export default function GroupsListScreen() {
         <FlatList
           data={groups}
           keyExtractor={(item) => item.id}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={GROUP_CARD_WIDTH + CARD_GAP}
+          decelerationRate="fast"
           contentContainerStyle={styles.list}
+          ItemSeparatorComponent={() => <View style={{ width: CARD_GAP }} />}
           renderItem={({ item }) => (
             <GroupCard
               group={item}
@@ -209,10 +214,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 110,
-  },
-  row: {
-    gap: 12,
-    marginBottom: 12,
   },
   empty: {
     flex: 1,

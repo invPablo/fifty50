@@ -7,7 +7,7 @@ import { BottomSheet } from '@/components/bottom-sheet';
 import { Currencies } from '@/constants/currencies';
 import { useTheme } from '@/hooks/use-theme';
 import { useGroupsStore } from '@/store/use-groups-store';
-import type { CurrencyCode, GroupType } from '@/types/models';
+import type { CurrencyCode } from '@/types/models';
 
 interface CreateGroupSheetProps {
   visible: boolean;
@@ -16,11 +16,6 @@ interface CreateGroupSheetProps {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const GROUP_TYPES: { id: GroupType; label: string }[] = [
-  { id: 'trip', label: '🧳 Viaje' },
-  { id: 'roommates', label: '🏠 Piso compartido' },
-];
 
 export function CreateGroupSheet({ visible, onClose, onPremiumRequired }: CreateGroupSheetProps) {
   const theme = useTheme();
@@ -33,7 +28,6 @@ export function CreateGroupSheet({ visible, onClose, onPremiumRequired }: Create
   const [emailInput, setEmailInput] = useState('');
   const [invites, setInvites] = useState<string[]>([]);
   const [currency, setCurrency] = useState<CurrencyCode>('EUR');
-  const [groupType, setGroupType] = useState<GroupType>('trip');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -43,7 +37,6 @@ export function CreateGroupSheet({ visible, onClose, onPremiumRequired }: Create
     setEmailInput('');
     setInvites([]);
     setCurrency('EUR');
-    setGroupType('trip');
     setError(null);
   }
 
@@ -63,7 +56,7 @@ export function CreateGroupSheet({ visible, onClose, onPremiumRequired }: Create
     setSubmitting(true);
     setError(null);
     try {
-      const groupId = await addGroup(name.trim(), currency, yourDisplayName.trim(), groupType);
+      const groupId = await addGroup(name.trim(), currency, yourDisplayName.trim(), 'trip');
       for (const email of invites) {
         await addMember(groupId, email, '');
       }
@@ -92,27 +85,6 @@ export function CreateGroupSheet({ visible, onClose, onPremiumRequired }: Create
     <BottomSheet visible={visible} title="Nuevo grupo" onClose={onClose}>
       <ScrollView keyboardShouldPersistTaps="handled">
         {error && <Text style={[styles.error, { color: theme.debt }]}>{error}</Text>}
-
-        <Text style={[styles.label, { color: theme.textSecondary }]}>Tipo de grupo</Text>
-        <View style={styles.chipWrap}>
-          {GROUP_TYPES.map((t) => {
-            const selected = groupType === t.id;
-            return (
-              <Pressable
-                key={t.id}
-                onPress={() => setGroupType(t.id)}
-                style={({ pressed }) => [
-                  styles.chip,
-                  { backgroundColor: selected ? theme.accent : theme.accentSoft, opacity: pressed ? 0.7 : 1 },
-                ]}
-              >
-                <Text style={[styles.chipText, { color: selected ? '#FFFFFF' : theme.accent }]}>
-                  {t.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
 
         <Text style={[styles.label, { color: theme.textSecondary }]}>Nombre del grupo</Text>
         <TextInput

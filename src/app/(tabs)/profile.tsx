@@ -15,7 +15,7 @@ export default function ProfileScreen() {
   const { session } = useSession();
   const user = session?.user;
   const userEmail = user?.email || 'No disponible';
-  const userName = user?.user_metadata?.full_name || userEmail?.split('@')[0] || 'Usuario';
+  const userName = user?.user_metadata?.display_name || userEmail?.split('@')[0] || 'Usuario';
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

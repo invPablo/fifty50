@@ -1,11 +1,12 @@
 import { Feather } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
 import { currencySymbol } from '@/constants/currencies';
 import { getAvatarColor } from '@/lib/avatar';
 import { useSession } from '@/hooks/use-session';
-import { useTheme } from '@/hooks/use-theme';
 import { useGroupsStore } from '@/store/use-groups-store';
 import type { Group } from '@/types/models';
 
@@ -14,8 +15,10 @@ interface GroupCardProps {
   onPress: () => void;
 }
 
+export const GROUP_CARD_WIDTH = 280;
+export const GROUP_CARD_HEIGHT = 340;
+
 export function GroupCard({ group, onPress }: GroupCardProps) {
-  const theme = useTheme();
   const { session } = useSession();
   const calculateDebts = useGroupsStore((s) => s.calculateDebts);
   const { balances } = calculateDebts(group);
@@ -26,8 +29,6 @@ export function GroupCard({ group, onPress }: GroupCardProps) {
 
   const isCredit = yourBalance > 0.01;
   const isDebt = yourBalance < -0.01;
-  const balanceColor = isCredit ? theme.credit : isDebt ? theme.debt : theme.textSecondary;
-  const pillBackground = isCredit ? theme.creditSoft : isDebt ? theme.debtSoft : undefined;
   const balanceLabel = isCredit
     ? `Te deben ${symbol}${yourBalance.toFixed(2)}`
     : isDebt
@@ -37,26 +38,34 @@ export function GroupCard({ group, onPress }: GroupCardProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        { backgroundColor: theme.card, borderColor: theme.border, opacity: pressed ? 0.9 : 1 },
-      ]}
+      style={({ pressed }) => [styles.card, { opacity: pressed ? 0.92 : 1 }]}
     >
-      <View style={styles.iconGlowWrap}>
-        <View style={[styles.iconGlow, { backgroundColor: accentColor }]} />
-        <View style={[styles.iconWrap, { backgroundColor: accentColor }]}>
-          <Feather name={group.type === 'roommates' ? 'home' : 'map-pin'} size={20} color="#FFFFFF" />
+      {group.imageUrl ? (
+        <Image source={{ uri: group.imageUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
+      ) : (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: accentColor }]} />
+      )}
+
+      <LinearGradient
+        colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.15)', 'rgba(0,0,0,0.75)']}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {!group.imageUrl && (
+        <View style={styles.iconBadge}>
+          <Feather name={group.type === 'roommates' ? 'home' : 'map-pin'} size={18} color="#FFFFFF" />
         </View>
-      </View>
-      <Text style={[styles.name, { color: theme.text, fontFamily: Fonts.bold }]} numberOfLines={2}>
-        {group.name}
-      </Text>
-      <Text style={[styles.meta, { color: theme.textSecondary }]}>
-        {group.members.length} miembros · {group.expenses.length} gastos
-      </Text>
-      <View style={[styles.balancePill, pillBackground ? { backgroundColor: pillBackground } : null]}>
-        <Text style={[styles.balance, { color: balanceColor, fontFamily: Fonts.bold }]} numberOfLines={1}>
-          {balanceLabel}
+      )}
+
+      <View style={styles.content}>
+        <View style={styles.balancePill}>
+          <Text style={styles.balanceText}>{balanceLabel}</Text>
+        </View>
+        <Text style={[styles.name, { fontFamily: Fonts.bold }]} numberOfLines={2}>
+          {group.name}
+        </Text>
+        <Text style={styles.meta}>
+          {group.members.length} miembros · {group.expenses.length} gastos
         </Text>
       </View>
     </Pressable>
@@ -65,53 +74,51 @@ export function GroupCard({ group, onPress }: GroupCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    flex: 1,
-    borderRadius: 22,
-    borderWidth: 1,
-    padding: 16,
-    gap: 8,
-    minHeight: 156,
-    boxShadow: '0px 10px 28px rgba(0,0,0,0.14)',
-    elevation: 5,
-  },
-  iconGlowWrap: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  iconGlow: {
-    position: 'absolute',
-    width: 56,
-    height: 56,
+    width: GROUP_CARD_WIDTH,
+    height: GROUP_CARD_HEIGHT,
     borderRadius: 28,
-    opacity: 0.25,
+    overflow: 'hidden',
+    backgroundColor: '#0B0B0F',
+    boxShadow: '0px 14px 30px rgba(0,0,0,0.22)',
+    elevation: 6,
   },
-  iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 13,
+  iconBadge: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0px 4px 10px rgba(0,0,0,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.22)',
   },
-  name: {
-    fontSize: 16,
-    lineHeight: 20,
-  },
-  meta: {
-    fontSize: 12,
-    flex: 1,
+  content: {
+    position: 'absolute',
+    left: 18,
+    right: 18,
+    bottom: 18,
+    gap: 6,
   },
   balancePill: {
     alignSelf: 'flex-start',
     borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    marginTop: 'auto',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(255,255,255,0.92)',
   },
-  balance: {
-    fontSize: 13,
+  balanceText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#212529',
+  },
+  name: {
+    fontSize: 20,
+    color: '#FFFFFF',
+    lineHeight: 24,
+  },
+  meta: {
+    fontSize: 12.5,
+    color: 'rgba(255,255,255,0.85)',
   },
 });

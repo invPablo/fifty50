@@ -35,6 +35,12 @@
             "imageWidth": 76
           }
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Tranzfr necesita acceso a tus fotos para poner una imagen al grupo."
+        }
       ]
     ],
     "experiments": {

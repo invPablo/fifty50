@@ -14,7 +14,7 @@ import type {
 } from '@/types/models';
 
 const GROUP_SELECT = `
-  id, name, currency, group_type, created_at,
+  id, name, currency, group_type, image_url, created_at,
   group_members ( id, user_id, invited_email, display_name ),
   expenses (
     id, description, amount, paid_by, category, date,
@@ -28,6 +28,7 @@ function mapGroup(row: any): Group {
     id: row.id,
     name: row.name,
     type: row.group_type,
+    imageUrl: row.image_url ?? null,
     currency: row.currency,
     createdAt: row.created_at,
     members: (row.group_members ?? []).map(
@@ -96,6 +97,7 @@ interface GroupsState {
   ) => Promise<string>;
   deleteGroup: (groupId: string) => Promise<void>;
   addMember: (groupId: string, email: string, displayName: string) => Promise<void>;
+  updateGroupImage: (groupId: string, localUri: string) => Promise<void>;
   addExpense: (
     groupId: string,
     expense: {
@@ -226,6 +228,31 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
 
     if (error) throw error;
     await get().fetchGroupDetail(groupId);
+  },
+
+  updateGroupImage: async (groupId, localUri) => {
+    const ext = localUri.split('.').pop()?.split('?')[0]?.toLowerCase() || 'jpg';
+    const path = `${groupId}/${Date.now()}.${ext}`;
+    const blob = await (await fetch(localUri)).blob();
+
+    const { error: uploadError } = await supabase.storage
+      .from('group-images')
+      .upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: true });
+    if (uploadError) throw uploadError;
+
+    const { data: publicUrlData } = supabase.storage.from('group-images').getPublicUrl(path);
+
+    const { error: updateError } = await supabase
+      .from('groups')
+      .update({ image_url: publicUrlData.publicUrl })
+      .eq('id', groupId);
+    if (updateError) throw updateError;
+
+    set((state) => ({
+      groups: state.groups.map((g) =>
+        g.id === groupId ? { ...g, imageUrl: publicUrlData.publicUrl } : g
+      ),
+    }));
   },
 
   addExpense: async (groupId, expense) => {

@@ -55,6 +55,7 @@ export default function GroupsListScreen() {
       )}
 
       <View style={styles.header}>
+        <View style={[styles.headerGlow, { backgroundColor: theme.accent }]} pointerEvents="none" />
         <Text style={[styles.title, { color: theme.text, fontFamily: Fonts.heading }]}>
           Tus grupos
         </Text>
@@ -66,12 +67,15 @@ export default function GroupsListScreen() {
           >
             <Feather name="user" size={20} color={theme.textSecondary} />
           </Pressable>
-          <Pressable
-            onPress={() => setSheetVisible(true)}
-            style={({ pressed }) => [styles.fab, { backgroundColor: theme.accent, opacity: pressed ? 0.8 : 1 }]}
-          >
-            <Feather name="plus" size={22} color="#FFFFFF" />
-          </Pressable>
+          <View style={styles.fabGlowWrap}>
+            <View style={[styles.fabGlow, { backgroundColor: theme.accent }]} />
+            <Pressable
+              onPress={() => setSheetVisible(true)}
+              style={({ pressed }) => [styles.fab, { backgroundColor: theme.accent, opacity: pressed ? 0.85 : 1 }]}
+            >
+              <Feather name="plus" size={22} color="#FFFFFF" />
+            </Pressable>
+          </View>
         </View>
       </View>
 
@@ -152,9 +156,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 8,
+    overflow: 'hidden',
+  },
+  headerGlow: {
+    position: 'absolute',
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    top: -140,
+    right: -60,
+    opacity: 0.15,
   },
   title: {
-    fontSize: 26,
+    fontSize: 28,
   },
   headerActions: {
     flexDirection: 'row',
@@ -164,12 +178,27 @@ const styles = StyleSheet.create({
   iconButton: {
     padding: 4,
   },
+  fabGlowWrap: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fabGlow: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    opacity: 0.3,
+  },
   fab: {
     width: 44,
     height: 44,
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
+    boxShadow: '0px 6px 16px rgba(0,0,0,0.25)',
+    elevation: 4,
   },
   list: {
     paddingHorizontal: 20,

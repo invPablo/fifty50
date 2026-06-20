@@ -39,11 +39,14 @@ export function GroupCard({ group, onPress }: GroupCardProps) {
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
-        { backgroundColor: theme.card, borderColor: theme.border, opacity: pressed ? 0.85 : 1 },
+        { backgroundColor: theme.card, borderColor: theme.border, opacity: pressed ? 0.9 : 1 },
       ]}
     >
-      <View style={[styles.iconWrap, { backgroundColor: accentColor + '22' }]}>
-        <Feather name={group.type === 'roommates' ? 'home' : 'map-pin'} size={20} color={accentColor} />
+      <View style={styles.iconGlowWrap}>
+        <View style={[styles.iconGlow, { backgroundColor: accentColor }]} />
+        <View style={[styles.iconWrap, { backgroundColor: accentColor }]}>
+          <Feather name={group.type === 'roommates' ? 'home' : 'map-pin'} size={20} color="#FFFFFF" />
+        </View>
       </View>
       <Text style={[styles.name, { color: theme.text, fontFamily: Fonts.bold }]} numberOfLines={2}>
         {group.name}
@@ -63,20 +66,35 @@ export function GroupCard({ group, onPress }: GroupCardProps) {
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    borderRadius: 18,
+    borderRadius: 22,
     borderWidth: 1,
     padding: 16,
     gap: 8,
-    minHeight: 150,
-    boxShadow: '0px 2px 8px rgba(0,0,0,0.05)',
+    minHeight: 156,
+    boxShadow: '0px 10px 28px rgba(0,0,0,0.14)',
+    elevation: 5,
+  },
+  iconGlowWrap: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  iconGlow: {
+    position: 'absolute',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    opacity: 0.25,
   },
   iconWrap: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 2,
+    boxShadow: '0px 4px 10px rgba(0,0,0,0.2)',
   },
   name: {
     fontSize: 16,

@@ -1,6 +1,6 @@
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/hooks/use-theme';
@@ -52,63 +52,76 @@ export default function SignupScreen() {
     displayName.trim().length > 0 && email.trim().length > 0 && password.length >= 6 && !loading;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <Text style={[styles.title, { color: theme.text }]}>Crear cuenta</Text>
-
-      {error && <Text style={[styles.error, { color: theme.debt }]}>{error}</Text>}
-      {info && <Text style={[styles.info, { color: theme.credit }]}>{info}</Text>}
-
-      <Text style={[styles.label, { color: theme.textSecondary }]}>Tu nombre</Text>
-      <TextInput
-        value={displayName}
-        onChangeText={setDisplayName}
-        placeholder="Pablo"
-        placeholderTextColor={theme.textSecondary}
-        style={[styles.input, { color: theme.text, borderColor: theme.border }]}
-      />
-
-      <Text style={[styles.label, { color: theme.textSecondary }]}>Email</Text>
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        placeholder="tucorreo@ejemplo.com"
-        placeholderTextColor={theme.textSecondary}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        style={[styles.input, { color: theme.text, borderColor: theme.border }]}
-      />
-
-      <Text style={[styles.label, { color: theme.textSecondary }]}>Contraseña</Text>
-      <TextInput
-        value={password}
-        onChangeText={setPassword}
-        placeholder="Mínimo 6 caracteres"
-        placeholderTextColor={theme.textSecondary}
-        secureTextEntry
-        style={[styles.input, { color: theme.text, borderColor: theme.border }]}
-      />
-
-      <Pressable
-        onPress={handleSignup}
-        disabled={!canSubmit}
-        style={[styles.button, { backgroundColor: canSubmit ? theme.accent : theme.border }]}
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <Text style={styles.buttonText}>{loading ? 'Creando…' : 'Crear cuenta'}</Text>
-      </Pressable>
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <Text style={[styles.title, { color: theme.text }]}>Crear cuenta</Text>
 
-      <View style={styles.footer}>
-        <Text style={{ color: theme.textSecondary }}>¿Ya tienes cuenta? </Text>
-        <Link href="/login" style={[styles.link, { color: theme.accent }]}>
-          Iniciar sesión
-        </Link>
-      </View>
+          {error && <Text style={[styles.error, { color: theme.debt }]}>{error}</Text>}
+          {info && <Text style={[styles.info, { color: theme.credit }]}>{info}</Text>}
+
+          <Text style={[styles.label, { color: theme.textSecondary }]}>Tu nombre</Text>
+          <TextInput
+            value={displayName}
+            onChangeText={setDisplayName}
+            placeholder="Pablo"
+            placeholderTextColor={theme.textSecondary}
+            style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+          />
+
+          <Text style={[styles.label, { color: theme.textSecondary }]}>Email</Text>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="tucorreo@ejemplo.com"
+            placeholderTextColor={theme.textSecondary}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+          />
+
+          <Text style={[styles.label, { color: theme.textSecondary }]}>Contraseña</Text>
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Mínimo 6 caracteres"
+            placeholderTextColor={theme.textSecondary}
+            secureTextEntry
+            style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+          />
+
+          <Pressable
+            onPress={handleSignup}
+            disabled={!canSubmit}
+            style={[styles.button, { backgroundColor: canSubmit ? theme.accent : theme.border }]}
+          >
+            <Text style={styles.buttonText}>{loading ? 'Creando…' : 'Crear cuenta'}</Text>
+          </Pressable>
+
+          <View style={styles.footer}>
+            <Text style={{ color: theme.textSecondary }}>¿Ya tienes cuenta? </Text>
+            <Link href="/login" style={[styles.link, { color: theme.accent }]}>
+              Iniciar sesión
+            </Link>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
+  },
+  flex: {
+    flex: 1,
+  },
+  container: {
+    flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 28,
   },

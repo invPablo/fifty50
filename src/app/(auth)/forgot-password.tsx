@@ -1,6 +1,6 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/hooks/use-theme';
@@ -31,41 +31,54 @@ export default function ForgotPasswordScreen() {
   const canSubmit = email.trim().length > 0 && !loading;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <Text style={[styles.title, { color: theme.text }]}>Recuperar contraseña</Text>
-
-      {error && <Text style={[styles.error, { color: theme.debt }]}>{error}</Text>}
-      {info && <Text style={[styles.info, { color: theme.credit }]}>{info}</Text>}
-
-      <Text style={[styles.label, { color: theme.textSecondary }]}>Email</Text>
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        placeholder="tucorreo@ejemplo.com"
-        placeholderTextColor={theme.textSecondary}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        style={[styles.input, { color: theme.text, borderColor: theme.border }]}
-      />
-
-      <Pressable
-        onPress={handleSend}
-        disabled={!canSubmit}
-        style={[styles.button, { backgroundColor: canSubmit ? theme.accent : theme.border }]}
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <Text style={styles.buttonText}>{loading ? 'Enviando…' : 'Enviar enlace'}</Text>
-      </Pressable>
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <Text style={[styles.title, { color: theme.text }]}>Recuperar contraseña</Text>
 
-      <Link href="/login" style={[styles.link, { color: theme.accent }]}>
-        Volver a iniciar sesión
-      </Link>
+          {error && <Text style={[styles.error, { color: theme.debt }]}>{error}</Text>}
+          {info && <Text style={[styles.info, { color: theme.credit }]}>{info}</Text>}
+
+          <Text style={[styles.label, { color: theme.textSecondary }]}>Email</Text>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="tucorreo@ejemplo.com"
+            placeholderTextColor={theme.textSecondary}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+          />
+
+          <Pressable
+            onPress={handleSend}
+            disabled={!canSubmit}
+            style={[styles.button, { backgroundColor: canSubmit ? theme.accent : theme.border }]}
+          >
+            <Text style={styles.buttonText}>{loading ? 'Enviando…' : 'Enviar enlace'}</Text>
+          </Pressable>
+
+          <Link href="/login" style={[styles.link, { color: theme.accent }]}>
+            Volver a iniciar sesión
+          </Link>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
+  },
+  flex: {
+    flex: 1,
+  },
+  container: {
+    flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 28,
   },

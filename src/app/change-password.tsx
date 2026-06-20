@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Fonts } from '@/constants/theme';
@@ -37,8 +37,9 @@ export default function ChangePasswordScreen() {
 
     try {
       // Verify current password by trying to sign in
+      const { data: userData } = await supabase.auth.getUser();
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: supabase.auth.user()?.email || '',
+        email: userData.user?.email || '',
         password: currentPassword,
       });
 
@@ -90,7 +91,11 @@ export default function ChangePasswordScreen() {
         <View style={styles.placeholder} />
       </View>
 
-      <View style={styles.content}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {success && (
           <View style={[styles.successCard, { backgroundColor: theme.creditSoft }]}>
             <Feather name="check-circle" size={20} color={theme.credit} />
@@ -198,13 +203,17 @@ export default function ChangePasswordScreen() {
             {loading ? 'Cambiando…' : 'Cambiar contraseña'}
           </Text>
         </Pressable>
-      </View>
+      </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  flex: {
     flex: 1,
   },
   header: {
@@ -227,9 +236,10 @@ const styles = StyleSheet.create({
     width: 32,
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: 20,
     paddingTop: 24,
+    paddingBottom: 24,
   },
   label: {
     fontSize: 13,

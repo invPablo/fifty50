@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -17,22 +17,27 @@ export function BottomSheet({ visible, title, onClose, children }: BottomSheetPr
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable
-          style={[styles.sheet, { backgroundColor: theme.card }]}
-          onPress={(e) => e.stopPropagation()}
-        >
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: theme.text, fontFamily: Fonts.heading }]}>
-              {title}
-            </Text>
-            <Pressable onPress={onClose} hitSlop={8} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
-              <Feather name="x" size={22} color={theme.textSecondary} />
-            </Pressable>
-          </View>
-          {children}
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <Pressable style={styles.overlayTouchable} onPress={onClose}>
+          <Pressable
+            style={[styles.sheet, { backgroundColor: theme.card }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.header}>
+              <Text style={[styles.title, { color: theme.text, fontFamily: Fonts.heading }]}>
+                {title}
+              </Text>
+              <Pressable onPress={onClose} hitSlop={8} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
+                <Feather name="x" size={22} color={theme.textSecondary} />
+              </Pressable>
+            </View>
+            {children}
+          </Pressable>
         </Pressable>
-      </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -41,6 +46,9 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  overlayTouchable: {
+    flex: 1,
     justifyContent: 'flex-end',
   },
   sheet: {

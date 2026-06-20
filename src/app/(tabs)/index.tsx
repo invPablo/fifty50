@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CreateGroupSheet } from '@/components/create-group-sheet';
@@ -15,6 +15,7 @@ import { useGroupsStore } from '@/store/use-groups-store';
 import { useSession } from '@/hooks/use-session';
 
 const CARD_GAP = 14;
+const SIDE_INSET = Math.max((Dimensions.get('window').width - GROUP_CARD_WIDTH) / 2, 20);
 
 export default function GroupsListScreen() {
   const theme = useTheme();
@@ -112,7 +113,7 @@ export default function GroupsListScreen() {
           showsHorizontalScrollIndicator={false}
           snapToInterval={GROUP_CARD_WIDTH + CARD_GAP}
           decelerationRate="fast"
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingHorizontal: SIDE_INSET }]}
           ItemSeparatorComponent={() => <View style={{ width: CARD_GAP }} />}
           renderItem={({ item }) => (
             <GroupCard
@@ -211,7 +212,6 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   list: {
-    paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 110,
   },

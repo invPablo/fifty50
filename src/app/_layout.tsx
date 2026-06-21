@@ -1,8 +1,8 @@
 import {
-  Manrope_700Bold,
-  Manrope_800ExtraBold,
+  Quicksand_600SemiBold,
+  Quicksand_700Bold,
   useFonts,
-} from '@expo-google-fonts/manrope';
+} from '@expo-google-fonts/quicksand';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -11,7 +11,7 @@ import { useSession } from '@/hooks/use-session';
 
 export default function RootLayout() {
   const { session, initializing } = useSession();
-  const [fontsLoaded] = useFonts({ Manrope_700Bold, Manrope_800ExtraBold });
+  const [fontsLoaded] = useFonts({ Quicksand_600SemiBold, Quicksand_700Bold });
   const router = useRouter();
   const segments = useSegments();
 

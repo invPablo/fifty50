@@ -19,6 +19,13 @@ interface GroupStackProps {
 
 const SWIPE_THRESHOLD = 110;
 const MAX_VISIBLE = 3;
+// Cards behind the front one peek out above it (offset up, sideways and
+// rotated a touch) so you can tell there's another group underneath.
+const STACK_TOP_PADDING = 34;
+const PEEK_Y = 20;
+const PEEK_X = 14;
+const PEEK_ROTATE = 4;
+const SIDE_PADDING = PEEK_X * (MAX_VISIBLE - 1);
 
 export function GroupStack({ groups, onOpenGroup }: GroupStackProps) {
   const [order, setOrder] = useState<string[]>(() => groups.map((g) => g.id));
@@ -79,6 +86,7 @@ function StackCard({
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const isFront = position === 0;
+  const side = position % 2 === 0 ? 1 : -1;
 
   const pan = Gesture.Pan()
     .enabled(isFront)
@@ -103,13 +111,16 @@ function StackCard({
 
   const animatedStyle = useAnimatedStyle(() => ({
     position: 'absolute',
+    top: STACK_TOP_PADDING,
+    left: SIDE_PADDING,
     zIndex: 10 - position,
     transform: [
-      { translateX: isFront ? translateX.value : 0 },
-      { translateY: (isFront ? translateY.value : 0) + position * 12 },
-      { scale: 1 - position * 0.05 },
+      { translateX: (isFront ? translateX.value : 0) + (isFront ? 0 : side * position * PEEK_X) },
+      { translateY: (isFront ? translateY.value : 0) - position * PEEK_Y },
+      { rotate: `${isFront ? 0 : side * position * PEEK_ROTATE}deg` },
+      { scale: 1 - position * 0.06 },
     ],
-    opacity: 1 - position * 0.18,
+    opacity: 1 - position * 0.12,
   }));
 
   return (
@@ -123,8 +134,8 @@ function StackCard({
 
 const styles = StyleSheet.create({
   wrap: {
-    width: GROUP_CARD_WIDTH,
-    height: GROUP_CARD_HEIGHT,
+    width: GROUP_CARD_WIDTH + SIDE_PADDING * 2,
+    height: GROUP_CARD_HEIGHT + STACK_TOP_PADDING,
     alignSelf: 'center',
   },
 });

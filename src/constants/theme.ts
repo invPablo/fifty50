@@ -29,9 +29,9 @@ export const Colors = {
 
 export type ThemeColors = typeof Colors.light;
 
-// Manrope for headings/amounts only — body text stays on the system font for
-// legibility and to keep the bundle small. Loaded via useFonts in _layout.tsx.
+// Quicksand for headings/amounts only — body text stays on the system font
+// for legibility and to keep the bundle small. Loaded via useFonts in _layout.tsx.
 export const Fonts = {
-  heading: 'Manrope_800ExtraBold',
-  bold: 'Manrope_700Bold',
+  heading: 'Quicksand_700Bold',
+  bold: 'Quicksand_600SemiBold',
 };

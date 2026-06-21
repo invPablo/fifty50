@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
@@ -20,12 +21,13 @@ export function SettlementRow({
   variant = 'suggested',
 }: SettlementRowProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const from = membersById[transaction.from];
   const to = membersById[transaction.to];
   const recorded = variant === 'recorded';
   const background = recorded ? theme.creditSoft : theme.accentSoft;
   const accent = recorded ? theme.credit : theme.accent;
-  const verb = recorded ? 'le pagó a' : 'le paga a';
+  const verb = recorded ? t('settlementRow.paidTo') : t('settlementRow.paysTo');
 
   return (
     <View style={[styles.row, { backgroundColor: background }]}>

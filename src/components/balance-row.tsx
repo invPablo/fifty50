@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
@@ -13,9 +14,12 @@ interface BalanceRowProps {
 
 export function BalanceRow({ member, amount, symbol }: BalanceRowProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const color = amount > 0.01 ? theme.credit : amount < -0.01 ? theme.debt : theme.textSecondary;
   const sign = amount > 0 ? '+' : amount < 0 ? '-' : '';
-  const label = member.userId ? member.displayName : `${member.displayName} (pendiente)`;
+  const label = member.userId
+    ? member.displayName
+    : t('balanceRow.pending', { name: member.displayName });
 
   return (
     <View style={styles.row}>

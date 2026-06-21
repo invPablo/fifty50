@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Categories } from '@/constants/categories';
@@ -14,6 +15,7 @@ interface ExpenseRowProps {
 
 export function ExpenseRow({ expense, symbol, membersById, currentMemberId }: ExpenseRowProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const category = Categories.find((c) => c.id === expense.category);
   const payer = membersById[expense.paidBy];
   const payerName = payer?.displayName ?? '?';
@@ -30,8 +32,8 @@ export function ExpenseRow({ expense, symbol, membersById, currentMemberId }: Ex
   const net = (isPayer ? expense.amount : 0) - (mySplit?.shareAmount ?? 0);
 
   const meta = isPayer
-    ? `Tú pagaste ${symbol}${expense.amount.toFixed(2)}`
-    : `${payerName} pagó ${symbol}${expense.amount.toFixed(2)}`;
+    ? t('expenseRow.youPaid', { amount: `${symbol}${expense.amount.toFixed(2)}` })
+    : t('expenseRow.paid', { name: payerName, amount: `${symbol}${expense.amount.toFixed(2)}` });
 
   return (
     <View style={styles.row}>
@@ -44,7 +46,7 @@ export function ExpenseRow({ expense, symbol, membersById, currentMemberId }: Ex
       </View>
       {involved && net > 0.01 ? (
         <View style={styles.amountStack}>
-          <Text style={[styles.amountLabel, { color: theme.credit }]}>Prestaste</Text>
+          <Text style={[styles.amountLabel, { color: theme.credit }]}>{t('expenseRow.lent')}</Text>
           <Text style={[styles.amount, { color: theme.credit }]}>
             {symbol}
             {net.toFixed(2)}
@@ -52,7 +54,7 @@ export function ExpenseRow({ expense, symbol, membersById, currentMemberId }: Ex
         </View>
       ) : involved && net < -0.01 ? (
         <View style={styles.amountStack}>
-          <Text style={[styles.amountLabel, { color: theme.debt }]}>Debes</Text>
+          <Text style={[styles.amountLabel, { color: theme.debt }]}>{t('expenseRow.owe')}</Text>
           <Text style={[styles.amount, { color: theme.debt }]}>
             {symbol}
             {Math.abs(net).toFixed(2)}

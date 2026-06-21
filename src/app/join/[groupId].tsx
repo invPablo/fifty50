@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,6 +19,7 @@ interface GroupData {
 
 export default function JoinGroupScreen() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
   const { groupId } = useLocalSearchParams();
   const { session } = useSession();
@@ -45,11 +47,11 @@ export default function JoinGroupScreen() {
         .eq('id', groupId)
         .single();
 
-      if (err) throw new Error('Grupo no encontrado');
+      if (err) throw new Error(t('join.notFound'));
       setGroup(data);
       setShowNameModal(true);
     } catch (e: any) {
-      setError(e.message ?? 'No se pudo cargar el grupo');
+      setError(e.message ?? t('join.loadError'));
     } finally {
       setLoading(false);
     }
@@ -63,7 +65,7 @@ export default function JoinGroupScreen() {
       setShowNameModal(false);
       router.replace({ pathname: '/group/[id]', params: { id: group.id } });
     } catch (e: any) {
-      setError(e.message ?? 'No se pudo unir al grupo');
+      setError(e.message ?? t('join.joinError'));
     } finally {
       setJoining(false);
     }
@@ -73,9 +75,7 @@ export default function JoinGroupScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.center}>
-          <Text style={[styles.text, { color: theme.text }]}>
-            Debes estar registrado para unirte a un grupo
-          </Text>
+          <Text style={[styles.text, { color: theme.text }]}>{t('join.mustBeLoggedIn')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -85,7 +85,7 @@ export default function JoinGroupScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.center}>
-          <Text style={[styles.text, { color: theme.text }]}>Cargando grupo…</Text>
+          <Text style={[styles.text, { color: theme.text }]}>{t('join.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -108,7 +108,7 @@ export default function JoinGroupScreen() {
               { backgroundColor: theme.accent, opacity: pressed ? 0.8 : 1 },
             ]}
           >
-            <Text style={styles.backButtonText}>Volver</Text>
+            <Text style={styles.backButtonText}>{t('join.back')}</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -126,15 +126,15 @@ export default function JoinGroupScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Text style={[styles.modalTitle, { color: theme.text, fontFamily: Fonts.bold }]}>
-              Uniéndote a {group?.name}
+              {t('join.joiningGroup', { name: group?.name })}
             </Text>
             <Text style={[styles.modalSubtitle, { color: theme.textSecondary }]}>
-              ¿Cómo prefieres que te llame el grupo?
+              {t('join.askDisplayName')}
             </Text>
             <TextInput
               value={displayName}
               onChangeText={setDisplayName}
-              placeholder="Tu nombre"
+              placeholder={t('join.namePlaceholder')}
               placeholderTextColor={theme.textSecondary}
               style={[styles.modalInput, { color: theme.text, borderColor: theme.border }]}
               editable={!joining}
@@ -152,7 +152,7 @@ export default function JoinGroupScreen() {
               ]}
             >
               <Text style={styles.joinButtonText}>
-                {joining ? 'Uniéndose…' : 'Unirme al grupo'}
+                {joining ? t('join.joining') : t('join.join')}
               </Text>
             </Pressable>
           </View>

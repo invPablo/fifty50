@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
@@ -24,6 +25,7 @@ export function AddExpenseSheet({
   currency,
 }: AddExpenseSheetProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const addExpense = useGroupsStore((s) => s.addExpense);
 
   const [description, setDescription] = useState('');
@@ -66,7 +68,7 @@ export function AddExpenseSheet({
       reset();
       onClose();
     } catch (e: any) {
-      setError(e.message ?? 'No se pudo añadir el gasto.');
+      setError(e.message ?? t('addExpense.error'));
     } finally {
       setSubmitting(false);
     }
@@ -79,20 +81,20 @@ export function AddExpenseSheet({
     !submitting;
 
   return (
-    <BottomSheet visible={visible} title="Nuevo gasto" onClose={onClose}>
+    <BottomSheet visible={visible} title={t('addExpense.title')} onClose={onClose}>
       <ScrollView keyboardShouldPersistTaps="handled">
         {error && <Text style={[styles.error, { color: theme.debt }]}>{error}</Text>}
 
-        <Text style={[styles.label, { color: theme.textSecondary }]}>Descripción</Text>
+        <Text style={[styles.label, { color: theme.textSecondary }]}>{t('addExpense.descriptionLabel')}</Text>
         <TextInput
           value={description}
           onChangeText={setDescription}
-          placeholder="Cena del sábado"
+          placeholder={t('addExpense.descriptionPlaceholder')}
           placeholderTextColor={theme.textSecondary}
           style={[styles.input, { color: theme.text, borderColor: theme.border }]}
         />
 
-        <Text style={[styles.label, { color: theme.textSecondary }]}>Importe</Text>
+        <Text style={[styles.label, { color: theme.textSecondary }]}>{t('addExpense.amountLabel')}</Text>
         <TextInput
           value={amount}
           onChangeText={setAmount}
@@ -102,7 +104,7 @@ export function AddExpenseSheet({
           style={[styles.input, { color: theme.text, borderColor: theme.border }]}
         />
 
-        <Text style={[styles.label, { color: theme.textSecondary }]}>Categoría</Text>
+        <Text style={[styles.label, { color: theme.textSecondary }]}>{t('addExpense.categoryLabel')}</Text>
         <View style={styles.chipWrap}>
           {Categories.map((cat) => {
             const selected = category === cat.id;
@@ -119,14 +121,14 @@ export function AddExpenseSheet({
                 ]}
               >
                 <Text style={[styles.chipText, { color: selected ? '#FFFFFF' : cat.color }]}>
-                  {cat.label}
+                  {t(cat.labelKey)}
                 </Text>
               </Pressable>
             );
           })}
         </View>
 
-        <Text style={[styles.label, { color: theme.textSecondary }]}>Pagado por</Text>
+        <Text style={[styles.label, { color: theme.textSecondary }]}>{t('addExpense.paidByLabel')}</Text>
         <View style={styles.chipWrap}>
           {members.map((member) => {
             const selected = paidBy === member.id;
@@ -147,7 +149,7 @@ export function AddExpenseSheet({
           })}
         </View>
 
-        <Text style={[styles.label, { color: theme.textSecondary }]}>Entre quiénes</Text>
+        <Text style={[styles.label, { color: theme.textSecondary }]}>{t('addExpense.splitLabel')}</Text>
         <View style={styles.chipWrap}>
           {members.map((member) => {
             const selected = splitBetween.includes(member.id);
@@ -176,7 +178,7 @@ export function AddExpenseSheet({
             { backgroundColor: canAdd ? theme.accent : theme.border, opacity: pressed && canAdd ? 0.8 : 1 },
           ]}
         >
-          <Text style={styles.addButtonText}>{submitting ? 'Añadiendo…' : 'Añadir gasto'}</Text>
+          <Text style={styles.addButtonText}>{submitting ? t('addExpense.submitting') : t('addExpense.submit')}</Text>
         </Pressable>
       </ScrollView>
     </BottomSheet>

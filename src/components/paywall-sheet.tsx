@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
@@ -11,36 +12,33 @@ interface PaywallSheetProps {
 
 export function PaywallSheet({ visible, onClose }: PaywallSheetProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   return (
-    <BottomSheet visible={visible} title="Ya usaste tu grupo gratis" onClose={onClose}>
+    <BottomSheet visible={visible} title={t('paywall.title')} onClose={onClose}>
       <View style={styles.body}>
         <View style={[styles.iconCircle, { backgroundColor: theme.accentSoft }]}>
           <Feather name="lock" size={28} color={theme.accent} />
         </View>
-        <Text style={[styles.text, { color: theme.textSecondary }]}>
-          Puedes unirte a todos los grupos que quieras gratis. Para crear más de uno propio,
-          desbloquea grupos ilimitados con un pago único.
-        </Text>
+        <Text style={[styles.text, { color: theme.textSecondary }]}>{t('paywall.body')}</Text>
 
         <View style={[styles.priceTag, { backgroundColor: theme.accentSoft }]}>
           <Text style={[styles.priceText, { color: theme.accent }]}>2,99 €</Text>
-          <Text style={[styles.priceHint, { color: theme.accent }]}>pago único</Text>
+          <Text style={[styles.priceHint, { color: theme.accent }]}>{t('paywall.pricePerUse')}</Text>
         </View>
 
         <View style={[styles.featureRow, { borderColor: theme.border }]}>
           <Feather name="home" size={16} color={theme.textSecondary} />
           <Text style={[styles.featureText, { color: theme.textSecondary }]}>
-            Grupos de piso compartido
+            {t('paywall.roommatesFeature')}
           </Text>
           <View style={[styles.soonPill, { backgroundColor: theme.accentSoft }]}>
-            <Text style={[styles.soonPillText, { color: theme.accent }]}>Próximamente</Text>
+            <Text style={[styles.soonPillText, { color: theme.accent }]}>{t('paywall.comingSoon')}</Text>
           </View>
         </View>
 
         <Text style={[styles.comingSoon, { color: theme.textSecondary }]}>
-          Los pagos llegarán antes de publicar la app en las tiendas. De momento esta pantalla es
-          solo para probar el flujo.
+          {t('paywall.comingSoonNote')}
         </Text>
       </View>
     </BottomSheet>

@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
@@ -20,6 +21,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function CreateGroupSheet({ visible, onClose, onPremiumRequired }: CreateGroupSheetProps) {
   const theme = useTheme();
   const router = useRouter();
+  const { t } = useTranslation();
   const addGroup = useGroupsStore((s) => s.addGroup);
   const addMember = useGroupsStore((s) => s.addMember);
 
@@ -72,7 +74,7 @@ export function CreateGroupSheet({ visible, onClose, onPremiumRequired }: Create
         onClose();
         setTimeout(onPremiumRequired, 300);
       } else {
-        setError(e.message ?? 'No se pudo crear el grupo.');
+        setError(e.message ?? t('createGroup.error'));
       }
     } finally {
       setSubmitting(false);
@@ -82,36 +84,36 @@ export function CreateGroupSheet({ visible, onClose, onPremiumRequired }: Create
   const canCreate = name.trim().length > 0 && yourDisplayName.trim().length > 0 && !submitting;
 
   return (
-    <BottomSheet visible={visible} title="Nuevo grupo" onClose={onClose}>
+    <BottomSheet visible={visible} title={t('createGroup.title')} onClose={onClose}>
       <ScrollView keyboardShouldPersistTaps="handled">
         {error && <Text style={[styles.error, { color: theme.debt }]}>{error}</Text>}
 
-        <Text style={[styles.label, { color: theme.textSecondary }]}>Nombre del grupo</Text>
+        <Text style={[styles.label, { color: theme.textSecondary }]}>{t('createGroup.nameLabel')}</Text>
         <TextInput
           value={name}
           onChangeText={setName}
-          placeholder="Viaje a Lisboa"
+          placeholder={t('createGroup.namePlaceholder')}
           placeholderTextColor={theme.textSecondary}
           style={[styles.input, { color: theme.text, borderColor: theme.border }]}
         />
 
         <Text style={[styles.label, { color: theme.textSecondary }]}>
-          ¿Cómo te ven los demás en este grupo?
+          {t('createGroup.displayNameLabel')}
         </Text>
         <TextInput
           value={yourDisplayName}
           onChangeText={setYourDisplayName}
-          placeholder="Pablo"
+          placeholder={t('createGroup.displayNamePlaceholder')}
           placeholderTextColor={theme.textSecondary}
           style={[styles.input, { color: theme.text, borderColor: theme.border }]}
         />
 
-        <Text style={[styles.label, { color: theme.textSecondary }]}>Invitar por email</Text>
+        <Text style={[styles.label, { color: theme.textSecondary }]}>{t('createGroup.inviteLabel')}</Text>
         <View style={styles.memberInputRow}>
           <TextInput
             value={emailInput}
             onChangeText={setEmailInput}
-            placeholder="amigo@ejemplo.com"
+            placeholder={t('createGroup.invitePlaceholder')}
             placeholderTextColor={theme.textSecondary}
             autoCapitalize="none"
             keyboardType="email-address"
@@ -140,11 +142,11 @@ export function CreateGroupSheet({ visible, onClose, onPremiumRequired }: Create
         </View>
         <Text style={[styles.hint, { color: theme.textSecondary }]}>
           {invites.length === 0
-            ? 'Crea el grupo sin invitar a nadie. Podrás compartir el link después.'
-            : 'Si esa persona aún no tiene cuenta, se unirá automáticamente al registrarse con ese email.'}
+            ? t('createGroup.inviteHintEmpty')
+            : t('createGroup.inviteHintFilled')}
         </Text>
 
-        <Text style={[styles.label, { color: theme.textSecondary }]}>Moneda</Text>
+        <Text style={[styles.label, { color: theme.textSecondary }]}>{t('createGroup.currencyLabel')}</Text>
         <View style={styles.chipWrap}>
           {Currencies.map((c) => {
             const selected = currency === c.code;
@@ -173,7 +175,7 @@ export function CreateGroupSheet({ visible, onClose, onPremiumRequired }: Create
             { backgroundColor: canCreate ? theme.accent : theme.border, opacity: pressed && canCreate ? 0.8 : 1 },
           ]}
         >
-          <Text style={styles.createButtonText}>{submitting ? 'Creando…' : 'Crear grupo'}</Text>
+          <Text style={styles.createButtonText}>{submitting ? t('createGroup.submitting') : t('createGroup.submit')}</Text>
         </Pressable>
       </ScrollView>
     </BottomSheet>

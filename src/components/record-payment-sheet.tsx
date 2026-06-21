@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
@@ -29,6 +30,7 @@ export function RecordPaymentSheet({
   defaultAmount,
 }: RecordPaymentSheetProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const addSettlement = useGroupsStore((s) => s.addSettlement);
 
   const [from, setFrom] = useState(defaultFromId || members[0]?.id || '');
@@ -80,7 +82,7 @@ export function RecordPaymentSheet({
       reset();
       onClose();
     } catch (e: any) {
-      setError(e.message ?? 'No se pudo registrar el pago.');
+      setError(e.message ?? t('recordPayment.error'));
     } finally {
       setSubmitting(false);
     }
@@ -90,11 +92,11 @@ export function RecordPaymentSheet({
     !!from && !!to && from !== to && parseFloat(amount.replace(',', '.')) > 0 && !submitting;
 
   return (
-    <BottomSheet visible={visible} title="Registrar pago" onClose={onClose}>
+    <BottomSheet visible={visible} title={t('recordPayment.title')} onClose={onClose}>
       <ScrollView keyboardShouldPersistTaps="handled">
         {error && <Text style={[styles.error, { color: theme.debt }]}>{error}</Text>}
 
-        <Text style={[styles.label, { color: theme.textSecondary }]}>De</Text>
+        <Text style={[styles.label, { color: theme.textSecondary }]}>{t('recordPayment.from')}</Text>
         <View style={styles.chipWrap}>
           {members.map((member) => {
             const selected = from === member.id;
@@ -115,7 +117,7 @@ export function RecordPaymentSheet({
           })}
         </View>
 
-        <Text style={[styles.label, { color: theme.textSecondary }]}>A</Text>
+        <Text style={[styles.label, { color: theme.textSecondary }]}>{t('recordPayment.to')}</Text>
         <View style={styles.chipWrap}>
           {members.map((member) => {
             const selected = to === member.id;
@@ -136,7 +138,7 @@ export function RecordPaymentSheet({
           })}
         </View>
 
-        <Text style={[styles.label, { color: theme.textSecondary }]}>Importe</Text>
+        <Text style={[styles.label, { color: theme.textSecondary }]}>{t('recordPayment.amountLabel')}</Text>
         <TextInput
           value={amount}
           onChangeText={setAmount}
@@ -146,11 +148,11 @@ export function RecordPaymentSheet({
           style={[styles.input, { color: theme.text, borderColor: theme.border }]}
         />
 
-        <Text style={[styles.label, { color: theme.textSecondary }]}>Nota (opcional)</Text>
+        <Text style={[styles.label, { color: theme.textSecondary }]}>{t('recordPayment.noteLabel')}</Text>
         <TextInput
           value={note}
           onChangeText={setNote}
-          placeholder="Bizum, efectivo…"
+          placeholder={t('recordPayment.notePlaceholder')}
           placeholderTextColor={theme.textSecondary}
           style={[styles.input, { color: theme.text, borderColor: theme.border }]}
         />
@@ -163,7 +165,7 @@ export function RecordPaymentSheet({
             { backgroundColor: canRecord ? theme.credit : theme.border, opacity: pressed && canRecord ? 0.8 : 1 },
           ]}
         >
-          <Text style={styles.recordButtonText}>{submitting ? 'Registrando…' : 'Registrar pago'}</Text>
+          <Text style={styles.recordButtonText}>{submitting ? t('recordPayment.submitting') : t('recordPayment.submit')}</Text>
         </Pressable>
       </ScrollView>
     </BottomSheet>

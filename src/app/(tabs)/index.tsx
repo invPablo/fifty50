@@ -1,17 +1,15 @@
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CreateGroupSheet } from '@/components/create-group-sheet';
 import { GroupStack } from '@/components/group-stack';
-import { PaywallSheet } from '@/components/paywall-sheet';
 import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getDaysUntilExpiry } from '@/lib/email-verification';
-import { supabase } from '@/lib/supabase';
 import { useGroupsStore } from '@/store/use-groups-store';
+import { useUiStore } from '@/store/use-ui-store';
 import { useSession } from '@/hooks/use-session';
 
 export default function GroupsListScreen() {
@@ -20,8 +18,7 @@ export default function GroupsListScreen() {
   const { session } = useSession();
   const groups = useGroupsStore((s) => s.groups);
   const fetchGroups = useGroupsStore((s) => s.fetchGroups);
-  const [sheetVisible, setSheetVisible] = useState(false);
-  const [paywallVisible, setPaywallVisible] = useState(false);
+  const openCreateGroupSheet = useUiStore((s) => s.openCreateGroupSheet);
 
   const userName =
     session?.user?.user_metadata?.display_name || session?.user?.email?.split('@')[0] || 'ahí';
@@ -59,25 +56,12 @@ export default function GroupsListScreen() {
 
       <View style={styles.header}>
         <View style={[styles.headerGlow, { backgroundColor: theme.accent }]} pointerEvents="none" />
-        <View>
-          <Text style={[styles.title, { color: theme.text, fontFamily: Fonts.heading }]}>
-            Hola, {userName}
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Bienvenido a Tranzfr
-          </Text>
-        </View>
-        <View style={styles.headerActions}>
-          <View style={styles.fabGlowWrap}>
-            <View style={[styles.fabGlow, { backgroundColor: theme.accent }]} />
-            <Pressable
-              onPress={() => setSheetVisible(true)}
-              style={({ pressed }) => [styles.fab, { backgroundColor: theme.accent, opacity: pressed ? 0.85 : 1 }]}
-            >
-              <Feather name="plus" size={22} color="#FFFFFF" />
-            </Pressable>
-          </View>
-        </View>
+        <Text style={[styles.title, { color: theme.text, fontFamily: Fonts.heading }]}>
+          Hola, {userName}
+        </Text>
+        <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+          Bienvenido a Tranzfr
+        </Text>
       </View>
 
       {groups.length === 0 ? (
@@ -92,7 +76,7 @@ export default function GroupsListScreen() {
             Crea el primero para empezar a repartir gastos con tus amigos.
           </Text>
           <Pressable
-            onPress={() => setSheetVisible(true)}
+            onPress={openCreateGroupSheet}
             style={({ pressed }) => [
               styles.emptyCta,
               { backgroundColor: theme.accent, opacity: pressed ? 0.85 : 1 },
@@ -110,13 +94,6 @@ export default function GroupsListScreen() {
           />
         </View>
       )}
-
-      <CreateGroupSheet
-        visible={sheetVisible}
-        onClose={() => setSheetVisible(false)}
-        onPremiumRequired={() => setPaywallVisible(true)}
-      />
-      <PaywallSheet visible={paywallVisible} onClose={() => setPaywallVisible(false)} />
     </SafeAreaView>
   );
 }
@@ -144,9 +121,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 8,
@@ -167,36 +141,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 13,
     marginTop: 2,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  iconButton: {
-    padding: 4,
-  },
-  fabGlowWrap: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  fabGlow: {
-    position: 'absolute',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    opacity: 0.3,
-  },
-  fab: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0px 6px 16px rgba(0,0,0,0.25)',
-    elevation: 4,
   },
   stackWrap: {
     flex: 1,

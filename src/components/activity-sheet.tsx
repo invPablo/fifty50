@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BottomSheet } from '@/components/bottom-sheet';
@@ -14,13 +15,14 @@ interface ActivitySheetProps {
 
 export function ActivitySheet({ visible, onClose, items, onOpenGroup }: ActivitySheetProps) {
   const theme = useTheme();
+  const { t, i18n } = useTranslation();
 
   return (
-    <BottomSheet visible={visible} title="Actividad" onClose={onClose}>
+    <BottomSheet visible={visible} title={t('activity.title')} onClose={onClose}>
       <ScrollView>
         {items.length === 0 ? (
           <Text style={[styles.empty, { color: theme.textSecondary }]}>
-            Todavía no hay movimientos en tus grupos.
+            {t('activity.empty')}
           </Text>
         ) : (
           items.slice(0, 30).map((item) => (
@@ -41,7 +43,7 @@ export function ActivitySheet({ visible, onClose, items, onOpenGroup }: Activity
               <View style={styles.textWrap}>
                 <Text style={[styles.text, { color: theme.text }]}>{item.text}</Text>
                 <Text style={[styles.date, { color: theme.textSecondary }]}>
-                  {new Date(item.date).toLocaleDateString('es-ES', {
+                  {new Date(item.date).toLocaleDateString(i18n.language, {
                     day: 'numeric',
                     month: 'short',
                     hour: '2-digit',

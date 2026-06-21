@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
@@ -23,6 +24,7 @@ export default function GroupDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
   const router = useRouter();
+  const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
   const { session } = useSession();
   const group = useGroupsStore((s) => s.getGroup(id));
@@ -49,7 +51,7 @@ export default function GroupDetailScreen() {
   if (!group) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <Text style={{ color: theme.text }}>{loaded ? 'Grupo no encontrado.' : 'Cargando…'}</Text>
+        <Text style={{ color: theme.text }}>{loaded ? t('groupDetail.notFound') : t('groupDetail.loading')}</Text>
       </SafeAreaView>
     );
   }
@@ -62,21 +64,21 @@ export default function GroupDetailScreen() {
   const currentMemberId = myMember?.id ?? '';
   const myBalanceValue = myMember ? balances[myMember.id] ?? 0 : 0;
   const otherMembers = group.members.filter((m) => m.id !== currentMemberId);
-  const myTransaction = transactions.find((t) => t.from === currentMemberId);
+  const myTransaction = transactions.find((txn) => txn.from === currentMemberId);
 
   const isCredit = myBalanceValue > 0.01;
   const isDebt = myBalanceValue < -0.01;
-  let summaryText = 'Estáis saldados';
+  let summaryText = t('groupDetail.settled');
   if (myMember && (isCredit || isDebt)) {
     if (otherMembers.length === 1) {
       const other = otherMembers[0];
       summaryText = isCredit
-        ? `${other.displayName} te debe ${symbol}${myBalanceValue.toFixed(2)}`
-        : `Le debes ${symbol}${Math.abs(myBalanceValue).toFixed(2)} a ${other.displayName}`;
+        ? t('groupDetail.theyOweYou', { name: other.displayName, amount: `${symbol}${myBalanceValue.toFixed(2)}` })
+        : t('groupDetail.youOweThem', { name: other.displayName, amount: `${symbol}${Math.abs(myBalanceValue).toFixed(2)}` });
     } else {
       summaryText = isCredit
-        ? `Te deben ${symbol}${myBalanceValue.toFixed(2)} en total`
-        : `Debes ${symbol}${Math.abs(myBalanceValue).toFixed(2)} en total`;
+        ? t('groupDetail.owedToYouTotal', { amount: `${symbol}${myBalanceValue.toFixed(2)}` })
+        : t('groupDetail.youOweTotal', { amount: `${symbol}${Math.abs(myBalanceValue).toFixed(2)}` });
     }
   }
   const summaryColor = isCredit ? theme.credit : isDebt ? theme.debt : theme.textSecondary;
@@ -100,7 +102,7 @@ export default function GroupDetailScreen() {
     const monthKey = item.date.slice(0, 7);
     if (monthKey !== lastMonthKey) {
       lastMonthKey = monthKey;
-      const label = new Date(item.date).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+      const label = new Date(item.date).toLocaleDateString(i18n.language, { month: 'long', year: 'numeric' });
       historialNodes.push({ kind: 'month', key: `month-${monthKey}`, label: label.charAt(0).toUpperCase() + label.slice(1) });
     }
     historialNodes.push(
@@ -122,17 +124,17 @@ export default function GroupDetailScreen() {
   function confirmDelete() {
     // Alert.alert has no effect on react-native-web, so use window.confirm there instead.
     if (Platform.OS === 'web') {
-      if (window.confirm('¿Seguro que quieres eliminar este grupo? Esta acción no se puede deshacer.')) {
+      if (window.confirm(t('groupDetail.deleteMessage'))) {
         handleDelete();
       }
       return;
     }
     Alert.alert(
-      'Eliminar grupo',
-      '¿Seguro que quieres eliminar este grupo? Esta acción no se puede deshacer.',
+      t('groupDetail.deleteTitle'),
+      t('groupDetail.deleteMessage'),
       [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Eliminar', style: 'destructive', onPress: handleDelete },
+        { text: t('groupDetail.cancel'), style: 'cancel' },
+        { text: t('groupDetail.delete'), style: 'destructive', onPress: handleDelete },
       ]
     );
   }
@@ -141,9 +143,9 @@ export default function GroupDetailScreen() {
     const link = `https://tranzfr.app/join/${groupId}`;
     try {
       await Clipboard.setStringAsync(link);
-      Alert.alert('Link copiado', `Link compartible copiado al portapapeles:\n\n${link}`);
+      Alert.alert(t('groupDetail.linkCopiedTitle'), t('groupDetail.linkCopiedBody', { link }));
     } catch {
-      Alert.alert('Error', 'No se pudo copiar el link');
+      Alert.alert('Error', t('groupDetail.linkCopyError'));
     }
   }
 
@@ -159,7 +161,7 @@ export default function GroupDetailScreen() {
     try {
       await updateGroupImage(groupId, result.assets[0].uri);
     } catch {
-      Alert.alert('Error', 'No se pudo subir la imagen.');
+      Alert.alert('Error', t('groupDetail.imageUploadError'));
     } finally {
       setUploadingImage(false);
     }
@@ -203,7 +205,7 @@ export default function GroupDetailScreen() {
             {group.name}
           </Text>
           <Text style={[styles.groupMeta, { color: theme.textSecondary }]}>
-            {group.members.length} miembros · {group.currency}
+            {group.members.length} {t('groupDetail.members')} · {group.currency}
           </Text>
           <Text style={[styles.summary, { color: summaryColor, fontFamily: Fonts.bold }]}>
             {summaryText}
@@ -218,7 +220,7 @@ export default function GroupDetailScreen() {
               ]}
             >
               <Feather name="send" size={18} color="#FFFFFF" />
-              <Text style={styles.settleText}>Liquidar</Text>
+              <Text style={styles.settleText}>{t('groupDetail.settle')}</Text>
             </Pressable>
             <Pressable
               onPress={handleShare}
@@ -229,7 +231,7 @@ export default function GroupDetailScreen() {
             >
               <Feather name="share-2" size={18} color={theme.accent} />
               <Text style={[styles.shareText, { color: theme.accent }]}>
-                Compartir
+                {t('groupDetail.share')}
               </Text>
             </Pressable>
             <Pressable
@@ -242,7 +244,7 @@ export default function GroupDetailScreen() {
         </View>
 
         <View style={styles.content}>
-          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Balances</Text>
+          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>{t('groupDetail.balances')}</Text>
           <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
             {group.members.map((member) => (
               <BalanceRow
@@ -257,26 +259,26 @@ export default function GroupDetailScreen() {
           {transactions.length > 0 ? (
             <>
               <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-                Para saldar cuentas
+                {t('groupDetail.toSettle')}
               </Text>
-              {transactions.map((t, i) => (
-                <SettlementRow key={i} transaction={t} symbol={symbol} membersById={membersById} />
+              {transactions.map((txn, i) => (
+                <SettlementRow key={i} transaction={txn} symbol={symbol} membersById={membersById} />
               ))}
             </>
           ) : group.expenses.length > 0 ? (
             <View style={[styles.settledCard, { backgroundColor: theme.creditSoft }]}>
               <Feather name="check-circle" size={20} color={theme.credit} />
               <Text style={[styles.settledText, { color: theme.credit, fontFamily: Fonts.bold }]}>
-                Todo saldado
+                {t('groupDetail.allSettled')}
               </Text>
             </View>
           ) : null}
 
-          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Historial</Text>
+          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>{t('groupDetail.history')}</Text>
           <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
             {historialNodes.length === 0 ? (
               <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-                Todavía no hay movimientos en este grupo.
+                {t('groupDetail.noMovements')}
               </Text>
             ) : (
               historialNodes.map((node) => {
@@ -318,7 +320,7 @@ export default function GroupDetailScreen() {
         style={({ pressed }) => [styles.addFab, { backgroundColor: theme.accent, opacity: pressed ? 0.85 : 1 }]}
       >
         <Feather name="plus" size={20} color="#FFFFFF" />
-        <Text style={styles.addFabText}>Añadir gasto</Text>
+        <Text style={styles.addFabText}>{t('groupDetail.addExpense')}</Text>
       </Pressable>
 
       <AddExpenseSheet

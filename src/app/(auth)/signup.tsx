@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { GlassView } from "expo-glass-effect";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Image,
   ImageBackground,
@@ -25,6 +26,7 @@ const LOGO_WORDMARK = require("../../../assets/images/logo-wordmark.png");
 
 export default function SignupScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,7 +55,7 @@ export default function SignupScreen() {
     }
     // Account created but email not verified yet
     // Show message and auto-login after 2 seconds
-    setInfo("¡Cuenta creada! Verifica tu email en los próximos 30 días.");
+    setInfo(t('signup.accountCreated'));
     setTimeout(() => {
       // Try to login with the credentials
       supabase.auth
@@ -106,13 +108,13 @@ export default function SignupScreen() {
               tintColor="rgba(0,0,0,0.35)"
             >
               <Text style={[styles.cardTitle, { fontFamily: Fonts.heading }]}>
-                Crear cuenta
+                {t('signup.title')}
               </Text>
 
               {error && <Text style={styles.error}>{error}</Text>}
               {info && <Text style={styles.info}>{info}</Text>}
 
-              <Text style={styles.label}>Tu nombre para mostrar</Text>
+              <Text style={styles.label}>{t('signup.displayName')}</Text>
               <View style={styles.inputWrapper}>
                 <Feather name="user" size={18} color="rgba(255,255,255,0.7)" />
                 <TextInput
@@ -124,13 +126,13 @@ export default function SignupScreen() {
                 />
               </View>
 
-              <Text style={[styles.label, { marginTop: 16 }]}>Email</Text>
+              <Text style={[styles.label, { marginTop: 16 }]}>{t('signup.email')}</Text>
               <View style={styles.inputWrapper}>
                 <Feather name="mail" size={18} color="rgba(255,255,255,0.7)" />
                 <TextInput
                   value={email}
                   onChangeText={setEmail}
-                  placeholder="Aqui va tu email"
+                  placeholder={t('signup.emailPlaceholder')}
                   placeholderTextColor="rgba(255,255,255,0.5)"
                   autoCapitalize="none"
                   keyboardType="email-address"
@@ -138,13 +140,13 @@ export default function SignupScreen() {
                 />
               </View>
 
-              <Text style={[styles.label, { marginTop: 16 }]}>Contraseña</Text>
+              <Text style={[styles.label, { marginTop: 16 }]}>{t('signup.password')}</Text>
               <View style={styles.inputWrapper}>
                 <Feather name="lock" size={18} color="rgba(255,255,255,0.7)" />
                 <TextInput
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="Mínimo 8 caracteres"
+                  placeholder={t('signup.passwordPlaceholder')}
                   placeholderTextColor="rgba(255,255,255,0.5)"
                   secureTextEntry={!showPassword}
                   style={styles.input}
@@ -179,14 +181,14 @@ export default function SignupScreen() {
                     { color: canSubmit ? "#16161D" : "rgba(255,255,255,0.7)" },
                   ]}
                 >
-                  {loading ? "Creando…" : "Crear cuenta"}
+                  {loading ? t('signup.submitting') : t('signup.submit')}
                 </Text>
               </Pressable>
 
               <View style={styles.footer}>
-                <Text style={styles.footerText}>¿Ya tienes cuenta? </Text>
+                <Text style={styles.footerText}>{t('signup.haveAccount')} </Text>
                 <Link href="/login" style={styles.footerLink}>
-                  Iniciar sesión
+                  {t('signup.login')}
                 </Link>
               </View>
             </GlassView>

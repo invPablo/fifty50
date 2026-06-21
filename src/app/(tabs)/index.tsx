@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -20,6 +21,7 @@ import type { CurrencyCode } from '@/types/models';
 export default function GroupsListScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const { t } = useTranslation();
   const { session } = useSession();
   const groups = useGroupsStore((s) => s.groups);
   const fetchGroups = useGroupsStore((s) => s.fetchGroups);
@@ -68,10 +70,10 @@ export default function GroupsListScreen() {
           <Feather name="alert-circle" size={18} color={theme.debt} />
           <View style={styles.emailWarningContent}>
             <Text style={[styles.emailWarningTitle, { color: theme.debt, fontFamily: Fonts.bold }]}>
-              Verifica tu email
+              {t('home.verifyEmail')}
             </Text>
             <Text style={[styles.emailWarningText, { color: theme.debt }]}>
-              {emailVerificationDays} día{emailVerificationDays === 1 ? '' : 's'} restante{emailVerificationDays === 1 ? '' : 's'}
+              {t('home.daysLeft', { count: emailVerificationDays ?? 0 })}
             </Text>
           </View>
         </View>
@@ -82,10 +84,10 @@ export default function GroupsListScreen() {
         <View style={styles.headerRow}>
           <View>
             <Text style={[styles.title, { color: theme.text, fontFamily: Fonts.heading }]}>
-              Hola, {userName}
+              {t('home.greeting', { name: userName })}
             </Text>
             <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-              Bienvenido a Tranzfr
+              {t('home.subtitle')}
             </Text>
           </View>
           <Pressable
@@ -112,10 +114,10 @@ export default function GroupsListScreen() {
             <Feather name="users" size={36} color={theme.accent} />
           </View>
           <Text style={[styles.emptyTitle, { color: theme.text, fontFamily: Fonts.bold }]}>
-            Aún no tienes grupos
+            {t('home.emptyTitle')}
           </Text>
           <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-            Crea el primero para empezar a repartir gastos con tus amigos.
+            {t('home.emptyText')}
           </Text>
           <Pressable
             onPress={openCreateGroupSheet}
@@ -125,7 +127,7 @@ export default function GroupsListScreen() {
             ]}
           >
             <Feather name="plus" size={18} color="#FFFFFF" />
-            <Text style={styles.emptyCtaText}>Crear tu primer grupo</Text>
+            <Text style={styles.emptyCtaText}>{t('home.createFirst')}</Text>
           </Pressable>
         </View>
       ) : (

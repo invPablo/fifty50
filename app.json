@@ -41,7 +41,8 @@
         {
           "photosPermission": "Tranzfr necesita acceso a tus fotos para poner una imagen al grupo."
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true

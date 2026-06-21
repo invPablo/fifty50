@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { GlassView } from "expo-glass-effect";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Image,
   ImageBackground,
@@ -25,6 +26,7 @@ const LOGO_WORDMARK = require("../../../assets/images/logo-wordmark.png");
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -81,18 +83,18 @@ export default function LoginScreen() {
               tintColor="rgba(0,0,0,0.35)"
             >
               <Text style={[styles.cardTitle, { fontFamily: Fonts.heading }]}>
-                Inicia sesión
+                {t('login.title')}
               </Text>
 
               {error && <Text style={styles.error}>{error}</Text>}
 
-              <Text style={styles.label}>Email</Text>
+              <Text style={styles.label}>{t('login.email')}</Text>
               <View style={styles.inputWrapper}>
                 <Feather name="mail" size={18} color="rgba(255,255,255,0.7)" />
                 <TextInput
                   value={email}
                   onChangeText={setEmail}
-                  placeholder="Tu email"
+                  placeholder={t('login.emailPlaceholder')}
                   placeholderTextColor="rgba(255,255,255,0.5)"
                   autoCapitalize="none"
                   keyboardType="email-address"
@@ -100,7 +102,7 @@ export default function LoginScreen() {
                 />
               </View>
 
-              <Text style={[styles.label, { marginTop: 16 }]}>Contraseña</Text>
+              <Text style={[styles.label, { marginTop: 16 }]}>{t('login.password')}</Text>
               <View style={styles.inputWrapper}>
                 <Feather name="lock" size={18} color="rgba(255,255,255,0.7)" />
                 <TextInput
@@ -141,18 +143,18 @@ export default function LoginScreen() {
                     { color: canSubmit ? "#16161D" : "rgba(255,255,255,0.7)" },
                   ]}
                 >
-                  {loading ? "Entrando…" : "Iniciar sesión"}
+                  {loading ? t('login.submitting') : t('login.submit')}
                 </Text>
               </Pressable>
 
               <Link href="/forgot-password" style={styles.link}>
-                ¿Olvidaste tu contraseña?
+                {t('login.forgotPassword')}
               </Link>
 
               <View style={styles.footer}>
-                <Text style={styles.footerText}>¿No tienes cuenta? </Text>
+                <Text style={styles.footerText}>{t('login.noAccount')} </Text>
                 <Link href="/signup" style={styles.footerLink}>
-                  Crear cuenta
+                  {t('login.createAccount')}
                 </Link>
               </View>
             </GlassView>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
@@ -17,26 +18,27 @@ interface GlobalBalanceCardProps {
 
 export function GlobalBalanceCard({ totals }: GlobalBalanceCardProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   if (totals.length === 0) return null;
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-      {totals.map((t) => (
-        <View key={t.currency} style={styles.row}>
+      {totals.map((total) => (
+        <View key={total.currency} style={styles.row}>
           <View style={styles.col}>
-            <Text style={[styles.label, { color: theme.textSecondary }]}>Te deben</Text>
+            <Text style={[styles.label, { color: theme.textSecondary }]}>{t('home.owed')}</Text>
             <Text style={[styles.amount, { color: theme.credit, fontFamily: Fonts.heading }]}>
-              {t.symbol}
-              {t.owed.toFixed(2)}
+              {total.symbol}
+              {total.owed.toFixed(2)}
             </Text>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
           <View style={styles.col}>
-            <Text style={[styles.label, { color: theme.textSecondary }]}>Debes</Text>
+            <Text style={[styles.label, { color: theme.textSecondary }]}>{t('home.owe')}</Text>
             <Text style={[styles.amount, { color: theme.debt, fontFamily: Fonts.heading }]}>
-              {t.symbol}
-              {t.owe.toFixed(2)}
+              {total.symbol}
+              {total.owe.toFixed(2)}
             </Text>
           </View>
         </View>

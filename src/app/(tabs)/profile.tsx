@@ -1,5 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -7,15 +8,19 @@ import { Avatar } from '@/components/avatar';
 import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useSession } from '@/hooks/use-session';
+import { setAppLanguage, SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
 import { supabase } from '@/lib/supabase';
+
+const LANGUAGE_LABELS: Record<SupportedLanguage, string> = { es: 'ES', en: 'EN' };
 
 export default function ProfileScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const { t, i18n } = useTranslation();
   const { session } = useSession();
   const user = session?.user;
-  const userEmail = user?.email || 'No disponible';
-  const userName = user?.user_metadata?.display_name || userEmail?.split('@')[0] || 'Usuario';
+  const userEmail = user?.email || t('profile.notAvailable');
+  const userName = user?.user_metadata?.display_name || userEmail?.split('@')[0] || t('profile.defaultName');
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -26,7 +31,7 @@ export default function ProfileScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: theme.text, fontFamily: Fonts.heading }]}>
-          Mi perfil
+          {t('profile.title')}
         </Text>
       </View>
 
@@ -43,13 +48,13 @@ export default function ProfileScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-            INFORMACIÓN
+            {t('profile.information')}
           </Text>
           <View style={[styles.infoItem, { borderBottomColor: theme.border }]}>
             <View style={styles.infoLabel}>
               <Feather name="mail" size={18} color={theme.textSecondary} />
               <Text style={[styles.infoLabelText, { color: theme.textSecondary }]}>
-                Email
+                {t('profile.email')}
               </Text>
             </View>
             <Text style={[styles.infoValue, { color: theme.text }]}>
@@ -60,18 +65,18 @@ export default function ProfileScreen() {
             <View style={styles.infoLabel}>
               <Feather name="calendar" size={18} color={theme.textSecondary} />
               <Text style={[styles.infoLabelText, { color: theme.textSecondary }]}>
-                Miembro desde
+                {t('profile.memberSince')}
               </Text>
             </View>
             <Text style={[styles.infoValue, { color: theme.text }]}>
-              {user?.created_at ? new Date(user.created_at).toLocaleDateString('es-ES') : '-'}
+              {user?.created_at ? new Date(user.created_at).toLocaleDateString(i18n.language) : '-'}
             </Text>
           </View>
         </View>
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-            SEGURIDAD
+            {t('profile.security')}
           </Text>
           <Pressable
             onPress={() => router.push('/change-password')}
@@ -83,7 +88,7 @@ export default function ProfileScreen() {
             <View style={styles.menuItemContent}>
               <Feather name="lock" size={18} color={theme.textSecondary} />
               <Text style={[styles.menuItemText, { color: theme.text }]}>
-                Cambiar contraseña
+                {t('profile.changePassword')}
               </Text>
             </View>
             <Feather name="chevron-right" size={18} color={theme.textSecondary} />
@@ -92,8 +97,45 @@ export default function ProfileScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-            PREFERENCIAS
+            {t('profile.preferences')}
           </Text>
+          <View
+            style={[
+              styles.menuItem,
+              { backgroundColor: theme.card, borderColor: theme.border, marginBottom: 10 },
+            ]}
+          >
+            <View style={styles.menuItemContent}>
+              <Feather name="globe" size={18} color={theme.textSecondary} />
+              <Text style={[styles.menuItemText, { color: theme.text }]}>
+                {t('welcome.chooseLanguage')}
+              </Text>
+            </View>
+            <View style={styles.languagePicker}>
+              {SUPPORTED_LANGUAGES.map((lang) => {
+                const active = i18n.language === lang;
+                return (
+                  <Pressable
+                    key={lang}
+                    onPress={() => setAppLanguage(lang)}
+                    style={[
+                      styles.languageOption,
+                      { backgroundColor: active ? theme.accent : theme.accentSoft },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.languageOptionText,
+                        { color: active ? '#FFFFFF' : theme.accent },
+                      ]}
+                    >
+                      {LANGUAGE_LABELS[lang]}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
           <Pressable
             style={({ pressed }) => [
               styles.menuItem,
@@ -103,7 +145,7 @@ export default function ProfileScreen() {
             <View style={styles.menuItemContent}>
               <Feather name="moon" size={18} color={theme.textSecondary} />
               <Text style={[styles.menuItemText, { color: theme.text }]}>
-                Tema oscuro
+                {t('profile.darkTheme')}
               </Text>
             </View>
             <Feather name="chevron-right" size={18} color={theme.textSecondary} />
@@ -120,7 +162,7 @@ export default function ProfileScreen() {
           >
             <Feather name="log-out" size={18} color={theme.debt} />
             <Text style={[styles.logoutText, { color: theme.debt }]}>
-              Cerrar sesión
+              {t('profile.logout')}
             </Text>
           </Pressable>
         </View>
@@ -207,6 +249,19 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     fontSize: 15,
+  },
+  languagePicker: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  languageOption: {
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  languageOptionText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   logoutButton: {
     flexDirection: 'row',

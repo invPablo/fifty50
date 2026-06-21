@@ -1,6 +1,7 @@
 import { GlassView } from "expo-glass-effect";
 import { Link, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Animated,
   Dimensions,
@@ -19,6 +20,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Fonts } from "@/constants/theme";
+import { setAppLanguage, SUPPORTED_LANGUAGES, type SupportedLanguage } from "@/i18n";
 
 const LOGO_WORDMARK = require("../../../assets/images/logo-wordmark.png");
 
@@ -26,41 +28,26 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 interface Slide {
   image: ImageSourcePropType;
-  title: string;
+  titleKey: string;
 }
 
 const SLIDES: Slide[] = [
-  {
-    image: require("../../../assets/images/onboarding/friends.jpg"),
-    title: "Divide gastos con amigos al instante",
-  },
-  {
-    image: require("../../../assets/images/onboarding/trip.jpg"),
-    title: "Organiza cualquier viaje o piso compartido",
-  },
-  {
-    image: require("../../../assets/images/onboarding/explore.jpg"),
-    title: "Explora ciudades nuevas sin perder la cuenta",
-  },
-  {
-    image: require("../../../assets/images/onboarding/escape.jpg"),
-    title: "Desde una escapada de finde hasta el viaje de tu vida",
-  },
-  {
-    image: require("../../../assets/images/onboarding/flamingo.jpg"),
-    title: "Disfruta del viaje, nosotros llevamos las cuentas",
-  },
-  {
-    image: require("../../../assets/images/onboarding/settled.jpg"),
-    title: "Saldad cuentas sin líos ni números",
-  },
+  { image: require("../../../assets/images/onboarding/friends.jpg"), titleKey: "welcome.slide1" },
+  { image: require("../../../assets/images/onboarding/trip.jpg"), titleKey: "welcome.slide2" },
+  { image: require("../../../assets/images/onboarding/explore.jpg"), titleKey: "welcome.slide3" },
+  { image: require("../../../assets/images/onboarding/escape.jpg"), titleKey: "welcome.slide4" },
+  { image: require("../../../assets/images/onboarding/flamingo.jpg"), titleKey: "welcome.slide5" },
+  { image: require("../../../assets/images/onboarding/settled.jpg"), titleKey: "welcome.slide6" },
 ];
+
+const LANGUAGE_LABELS: Record<SupportedLanguage, string> = { es: 'ES', en: 'EN' };
 
 const AUTO_ADVANCE_MS = 4000;
 const isIOS = Platform.OS === "ios";
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { t, i18n } = useTranslation();
   const scrollRef = useRef<ScrollView>(null);
   const [index, setIndex] = useState(0);
   const logoAnim = useRef(new Animated.Value(0)).current;
@@ -143,6 +130,27 @@ export default function WelcomeScreen() {
           </GlassView>
         </Animated.View>
 
+        <GlassView
+          style={[styles.languagePill, !isIOS && styles.glassFallback]}
+          glassEffectStyle="regular"
+          tintColor="rgba(0,0,0,0.25)"
+        >
+          {SUPPORTED_LANGUAGES.map((lang) => {
+            const active = i18n.language === lang;
+            return (
+              <Pressable
+                key={lang}
+                onPress={() => setAppLanguage(lang)}
+                style={[styles.languageOption, active && styles.languageOptionActive]}
+              >
+                <Text style={[styles.languageOptionText, active && styles.languageOptionTextActive]}>
+                  {LANGUAGE_LABELS[lang]}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </GlassView>
+
         <View style={styles.spacer} />
 
         <GlassView
@@ -151,7 +159,7 @@ export default function WelcomeScreen() {
           tintColor="rgba(0,0,0,0.3)"
         >
           <Text style={[styles.slideTitle, { fontFamily: Fonts.heading }]}>
-            {SLIDES[index].title}
+            {t(SLIDES[index].titleKey)}
           </Text>
 
           <View style={styles.dots}>
@@ -177,12 +185,12 @@ export default function WelcomeScreen() {
               { opacity: pressed ? 0.85 : 1 },
             ]}
           >
-            <Text style={styles.buttonText}>Empezar viaje</Text>
+            <Text style={styles.buttonText}>{t('welcome.start')}</Text>
           </Pressable>
 
           <Link href="/login" style={styles.loginLink}>
-            ¿Ya tienes cuenta?{" "}
-            <Text style={styles.loginLinkStrong}>Iniciar sesión</Text>
+            {t('welcome.haveAccount')}{" "}
+            <Text style={styles.loginLinkStrong}>{t('welcome.login')}</Text>
           </Link>
         </GlassView>
       </SafeAreaView>
@@ -220,6 +228,30 @@ const styles = StyleSheet.create({
   logoWordmark: {
     width: 75,
     height: 22,
+  },
+  languagePill: {
+    flexDirection: "row",
+    alignSelf: "center",
+    marginTop: 10,
+    padding: 4,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  languageOption: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  languageOptionActive: {
+    backgroundColor: "#FFFFFF",
+  },
+  languageOptionText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "rgba(255,255,255,0.8)",
+  },
+  languageOptionTextActive: {
+    color: "#16161D",
   },
   spacer: {
     flex: 1,

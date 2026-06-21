@@ -1,5 +1,6 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 
 export default function ForgotPasswordScreen() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [info, setInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +27,7 @@ export default function ForgotPasswordScreen() {
       setError(resetError.message);
       return;
     }
-    setInfo('Si esa cuenta existe, te hemos enviado un email con instrucciones.');
+    setInfo(t('forgotPassword.success'));
   }
 
   const canSubmit = email.trim().length > 0 && !loading;
@@ -37,16 +39,16 @@ export default function ForgotPasswordScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          <Text style={[styles.title, { color: theme.text }]}>Recuperar contraseña</Text>
+          <Text style={[styles.title, { color: theme.text }]}>{t('forgotPassword.title')}</Text>
 
           {error && <Text style={[styles.error, { color: theme.debt }]}>{error}</Text>}
           {info && <Text style={[styles.info, { color: theme.credit }]}>{info}</Text>}
 
-          <Text style={[styles.label, { color: theme.textSecondary }]}>Email</Text>
+          <Text style={[styles.label, { color: theme.textSecondary }]}>{t('forgotPassword.email')}</Text>
           <TextInput
             value={email}
             onChangeText={setEmail}
-            placeholder="tucorreo@ejemplo.com"
+            placeholder={t('forgotPassword.emailPlaceholder')}
             placeholderTextColor={theme.textSecondary}
             autoCapitalize="none"
             keyboardType="email-address"
@@ -58,11 +60,13 @@ export default function ForgotPasswordScreen() {
             disabled={!canSubmit}
             style={[styles.button, { backgroundColor: canSubmit ? theme.accent : theme.border }]}
           >
-            <Text style={styles.buttonText}>{loading ? 'Enviando…' : 'Enviar enlace'}</Text>
+            <Text style={styles.buttonText}>
+              {loading ? t('forgotPassword.sending') : t('forgotPassword.submit')}
+            </Text>
           </Pressable>
 
           <Link href="/login" style={[styles.link, { color: theme.accent }]}>
-            Volver a iniciar sesión
+            {t('forgotPassword.backToLogin')}
           </Link>
         </ScrollView>
       </KeyboardAvoidingView>

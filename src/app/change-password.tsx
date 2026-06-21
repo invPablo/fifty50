@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -11,6 +12,7 @@ import { supabase } from '@/lib/supabase';
 export default function ChangePasswordScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -44,7 +46,7 @@ export default function ChangePasswordScreen() {
       });
 
       if (signInError) {
-        setError('Contraseña actual incorrecta');
+        setError(t('changePassword.wrongPassword'));
         setLoading(false);
         return;
       }
@@ -55,7 +57,7 @@ export default function ChangePasswordScreen() {
       });
 
       if (updateError) {
-        setError(updateError.message || 'Error al cambiar contraseña');
+        setError(updateError.message || t('changePassword.genericError'));
         setLoading(false);
         return;
       }
@@ -70,7 +72,7 @@ export default function ChangePasswordScreen() {
         router.back();
       }, 2000);
     } catch (e: any) {
-      setError(e.message || 'Error desconocido');
+      setError(e.message || t('changePassword.unknownError'));
     } finally {
       setLoading(false);
     }
@@ -86,7 +88,7 @@ export default function ChangePasswordScreen() {
           <Feather name="chevron-left" size={24} color={theme.text} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: theme.text, fontFamily: Fonts.heading }]}>
-          Cambiar contraseña
+          {t('changePassword.title')}
         </Text>
         <View style={styles.placeholder} />
       </View>
@@ -100,14 +102,14 @@ export default function ChangePasswordScreen() {
           <View style={[styles.successCard, { backgroundColor: theme.creditSoft }]}>
             <Feather name="check-circle" size={20} color={theme.credit} />
             <Text style={[styles.successText, { color: theme.credit, fontFamily: Fonts.bold }]}>
-              Contraseña cambiada correctamente
+              {t('changePassword.success')}
             </Text>
           </View>
         )}
 
         {error && <Text style={[styles.error, { color: theme.debt }]}>{error}</Text>}
 
-        <Text style={[styles.label, { color: theme.textSecondary }]}>Contraseña actual</Text>
+        <Text style={[styles.label, { color: theme.textSecondary }]}>{t('changePassword.currentPassword')}</Text>
         <View style={[styles.inputWrapper, { borderColor: theme.border }]}>
           <TextInput
             value={currentPassword}
@@ -131,7 +133,7 @@ export default function ChangePasswordScreen() {
         </View>
 
         <Text style={[styles.label, { color: theme.textSecondary, marginTop: 20 }]}>
-          Nueva contraseña
+          {t('changePassword.newPassword')}
         </Text>
         <View style={[styles.inputWrapper, { borderColor: theme.border }]}>
           <TextInput
@@ -153,12 +155,12 @@ export default function ChangePasswordScreen() {
 
         {newPassword.length > 0 && newPassword.length < 6 && (
           <Text style={[styles.hint, { color: theme.debt }]}>
-            Mínimo 6 caracteres
+            {t('changePassword.minChars')}
           </Text>
         )}
 
         <Text style={[styles.label, { color: theme.textSecondary, marginTop: 20 }]}>
-          Confirmar nueva contraseña
+          {t('changePassword.confirmPassword')}
         </Text>
         <View style={[styles.inputWrapper, { borderColor: theme.border }]}>
           <TextInput
@@ -184,7 +186,7 @@ export default function ChangePasswordScreen() {
 
         {confirmPassword.length > 0 && confirmPassword !== newPassword && (
           <Text style={[styles.hint, { color: theme.debt }]}>
-            Las contraseñas no coinciden
+            {t('changePassword.mismatch')}
           </Text>
         )}
 
@@ -200,7 +202,7 @@ export default function ChangePasswordScreen() {
           ]}
         >
           <Text style={styles.submitButtonText}>
-            {loading ? 'Cambiando…' : 'Cambiar contraseña'}
+            {loading ? t('changePassword.submitting') : t('changePassword.submit')}
           </Text>
         </Pressable>
       </ScrollView>

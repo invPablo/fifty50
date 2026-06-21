@@ -1,11 +1,11 @@
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Dimensions, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CreateGroupSheet } from '@/components/create-group-sheet';
-import { GROUP_CARD_WIDTH, GroupCard } from '@/components/group-card';
+import { GroupStack } from '@/components/group-stack';
 import { PaywallSheet } from '@/components/paywall-sheet';
 import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -13,9 +13,6 @@ import { getDaysUntilExpiry } from '@/lib/email-verification';
 import { supabase } from '@/lib/supabase';
 import { useGroupsStore } from '@/store/use-groups-store';
 import { useSession } from '@/hooks/use-session';
-
-const CARD_GAP = 14;
-const SIDE_INSET = Math.max((Dimensions.get('window').width - GROUP_CARD_WIDTH) / 2, 20);
 
 export default function GroupsListScreen() {
   const theme = useTheme();
@@ -106,22 +103,12 @@ export default function GroupsListScreen() {
           </Pressable>
         </View>
       ) : (
-        <FlatList
-          data={groups}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          snapToInterval={GROUP_CARD_WIDTH + CARD_GAP}
-          decelerationRate="fast"
-          contentContainerStyle={[styles.list, { paddingHorizontal: SIDE_INSET }]}
-          ItemSeparatorComponent={() => <View style={{ width: CARD_GAP }} />}
-          renderItem={({ item }) => (
-            <GroupCard
-              group={item}
-              onPress={() => router.push({ pathname: '/group/[id]', params: { id: item.id } })}
-            />
-          )}
-        />
+        <View style={styles.stackWrap}>
+          <GroupStack
+            groups={groups}
+            onOpenGroup={(id) => router.push({ pathname: '/group/[id]', params: { id } })}
+          />
+        </View>
       )}
 
       <CreateGroupSheet
@@ -211,8 +198,9 @@ const styles = StyleSheet.create({
     boxShadow: '0px 6px 16px rgba(0,0,0,0.25)',
     elevation: 4,
   },
-  list: {
-    paddingTop: 8,
+  stackWrap: {
+    flex: 1,
+    justifyContent: 'center',
     paddingBottom: 110,
   },
   empty: {

@@ -5,6 +5,7 @@ import {
 } from '@expo-google-fonts/manrope';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useSession } from '@/hooks/use-session';
 
@@ -27,12 +28,14 @@ export default function RootLayout() {
   if (initializing || !fontsLoaded) return null;
 
   return (
-    <Stack>
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="change-password" options={{ headerShown: false }} />
-      <Stack.Screen name="group/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="join/[groupId]" options={{ headerShown: false }} />
-    </Stack>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Stack>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="change-password" options={{ headerShown: false }} />
+        <Stack.Screen name="group/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="join/[groupId]" options={{ headerShown: false }} />
+      </Stack>
+    </GestureHandlerRootView>
   );
 }

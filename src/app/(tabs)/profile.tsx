@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/avatar';
@@ -35,7 +35,7 @@ export default function ProfileScreen() {
         </Text>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
         <View style={[styles.profileCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           {user && <Avatar id={user.id} name={userName} size={80} />}
           <Text style={[styles.userName, { color: theme.text, fontFamily: Fonts.bold }]}>
@@ -166,7 +166,7 @@ export default function ProfileScreen() {
             </Text>
           </Pressable>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -185,9 +185,11 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  contentContainer: {
     paddingHorizontal: 20,
     paddingTop: 24,
-    paddingBottom: 100,
+    paddingBottom: 140,
   },
   profileCard: {
     alignItems: 'center',

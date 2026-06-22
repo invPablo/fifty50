@@ -18,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Fonts } from "@/constants/theme";
+import { signInWithGoogle } from "@/lib/google-auth";
 import { supabase } from "@/lib/supabase";
 
 const isIOS = Platform.OS === "ios";
@@ -32,6 +33,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   async function handleLogin() {
     setError(null);
@@ -46,6 +48,14 @@ export default function LoginScreen() {
       return;
     }
     router.replace("/");
+  }
+
+  async function handleGoogleLogin() {
+    setError(null);
+    setGoogleLoading(true);
+    const { error: googleError } = await signInWithGoogle();
+    setGoogleLoading(false);
+    if (googleError) setError(googleError);
   }
 
   const canSubmit = email.trim().length > 0 && password.length > 0 && !loading;
@@ -150,6 +160,26 @@ export default function LoginScreen() {
               <Link href="/forgot-password" style={styles.link}>
                 {t('login.forgotPassword')}
               </Link>
+
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>{t('login.orDivider')}</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <Pressable
+                onPress={handleGoogleLogin}
+                disabled={googleLoading}
+                style={({ pressed }) => [
+                  styles.googleButton,
+                  { opacity: pressed || googleLoading ? 0.8 : 1 },
+                ]}
+              >
+                <Text style={styles.googleIcon}>G</Text>
+                <Text style={styles.googleButtonText}>
+                  {googleLoading ? t('login.googleLoading') : t('login.continueWithGoogle')}
+                </Text>
+              </Pressable>
 
               <View style={styles.footer}>
                 <Text style={styles.footerText}>{t('login.noAccount')} </Text>
@@ -267,5 +297,42 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     color: ACCENT,
+  },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.2)",
+  },
+  dividerText: {
+    color: "rgba(255,255,255,0.6)",
+    fontSize: 12,
+  },
+  googleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    borderRadius: 16,
+    paddingVertical: 14,
+    marginTop: 16,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+  },
+  googleIcon: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#FFFFFF",
+  },
+  googleButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
 });

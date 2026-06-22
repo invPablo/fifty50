@@ -21,6 +21,9 @@ export default {
     forgotPassword: '¿Olvidaste tu contraseña?',
     noAccount: '¿No tienes cuenta?',
     createAccount: 'Crear cuenta',
+    orDivider: 'o',
+    continueWithGoogle: 'Continuar con Google',
+    googleLoading: 'Conectando…',
   },
   signup: {
     title: 'Crear cuenta',

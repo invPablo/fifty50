@@ -18,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Fonts } from "@/constants/theme";
+import { signInWithGoogle } from "@/lib/google-auth";
 import { supabase } from "@/lib/supabase";
 
 const isIOS = Platform.OS === "ios";
@@ -34,6 +35,7 @@ export default function SignupScreen() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   async function handleSignup() {
     setError(null);
@@ -60,6 +62,14 @@ export default function SignupScreen() {
     // user to tap the confirmation link (which deep-links back into the app
     // and signs them in automatically) before a session can exist.
     setInfo(t('signup.accountCreated'));
+  }
+
+  async function handleGoogleSignup() {
+    setError(null);
+    setGoogleLoading(true);
+    const { error: googleError } = await signInWithGoogle();
+    setGoogleLoading(false);
+    if (googleError) setError(googleError);
   }
 
   const canSubmit =
@@ -178,6 +188,26 @@ export default function SignupScreen() {
                 </Text>
               </Pressable>
 
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>{t('login.orDivider')}</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <Pressable
+                onPress={handleGoogleSignup}
+                disabled={googleLoading}
+                style={({ pressed }) => [
+                  styles.googleButton,
+                  { opacity: pressed || googleLoading ? 0.8 : 1 },
+                ]}
+              >
+                <Text style={styles.googleIcon}>G</Text>
+                <Text style={styles.googleButtonText}>
+                  {googleLoading ? t('login.googleLoading') : t('login.continueWithGoogle')}
+                </Text>
+              </Pressable>
+
               <View style={styles.footer}>
                 <Text style={styles.footerText}>{t('signup.haveAccount')} </Text>
                 <Link href="/login" style={styles.footerLink}>
@@ -293,5 +323,42 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     color: ACCENT,
+  },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.2)",
+  },
+  dividerText: {
+    color: "rgba(255,255,255,0.6)",
+    fontSize: 12,
+  },
+  googleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    borderRadius: 16,
+    paddingVertical: 14,
+    marginTop: 16,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+  },
+  googleIcon: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#FFFFFF",
+  },
+  googleButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
 });

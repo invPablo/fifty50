@@ -5,7 +5,7 @@ import {
 } from '@expo-google-fonts/quicksand';
 import * as Linking from 'expo-linking';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useSession } from '@/hooks/use-session';
@@ -18,6 +18,12 @@ export default function RootLayout() {
   const [i18nReady, setI18nReady] = useState(false);
   const router = useRouter();
   const segments = useSegments();
+  // setSession()/exchangeCodeForSession() fire onAuthStateChange before
+  // their promise resolves, which makes the session-redirect effect below
+  // race to "/" before our own router.replace('/reset-password') runs. This
+  // ref tells that effect to stand down while a recovery deep link is being
+  // handled.
+  const recoveryInProgress = useRef(false);
 
   useEffect(() => {
     initI18n().then(() => setI18nReady(true));
@@ -40,17 +46,17 @@ export default function RootLayout() {
       const accessToken = params.get('access_token');
       const refreshToken = params.get('refresh_token');
       const type = params.get('type');
+      if (!code && !(accessToken && refreshToken)) return;
+
+      if (type === 'recovery') {
+        recoveryInProgress.current = true;
+        router.replace('/reset-password');
+      }
 
       if (code) {
-        supabase.auth.exchangeCodeForSession(url).then(({ error }) => {
-          if (!error && type === 'recovery') router.replace('/reset-password');
-        });
+        supabase.auth.exchangeCodeForSession(url);
       } else if (accessToken && refreshToken) {
-        supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(
-          ({ error }) => {
-            if (!error && type === 'recovery') router.replace('/reset-password');
-          }
-        );
+        supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
       }
     }
     Linking.getInitialURL().then(handleUrl);
@@ -59,7 +65,7 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    if (initializing) return;
+    if (initializing || recoveryInProgress.current) return;
     const inAuthGroup = segments[0] === '(auth)';
     if (!session && !inAuthGroup) {
       router.replace('/welcome');

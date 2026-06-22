@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { GlassView } from "expo-glass-effect";
+import * as Linking from "expo-linking";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -42,7 +43,10 @@ export default function SignupScreen() {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
-      options: { data: { display_name: displayName.trim() } },
+      options: {
+        data: { display_name: displayName.trim() },
+        emailRedirectTo: Linking.createURL(""),
+      },
     });
     setLoading(false);
     if (signUpError) {
@@ -53,20 +57,10 @@ export default function SignupScreen() {
       router.replace("/");
       return;
     }
-    // Account created but email not verified yet
-    // Show message and auto-login after 2 seconds
+    // Account created but email not verified yet — Supabase requires the
+    // user to tap the confirmation link (which deep-links back into the app
+    // and signs them in automatically) before a session can exist.
     setInfo(t('signup.accountCreated'));
-    setTimeout(() => {
-      // Try to login with the credentials
-      supabase.auth
-        .signInWithPassword({
-          email: email.trim().toLowerCase(),
-          password,
-        })
-        .then(() => {
-          router.replace("/");
-        });
-    }, 2000);
   }
 
   const canSubmit =

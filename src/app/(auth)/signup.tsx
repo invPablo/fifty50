@@ -1,6 +1,5 @@
 import { Feather } from "@expo/vector-icons";
 import { GlassView } from "expo-glass-effect";
-import * as Linking from "expo-linking";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -45,7 +44,7 @@ export default function SignupScreen() {
       password,
       options: {
         data: { display_name: displayName.trim() },
-        emailRedirectTo: Linking.createURL(""),
+        emailRedirectTo: "tranzfr://",
       },
     });
     setLoading(false);
